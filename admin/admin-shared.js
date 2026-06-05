@@ -72,6 +72,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // Sync Cache Trigger
+    const forceSyncBtn = document.getElementById('forceSyncBtn');
+    if (forceSyncBtn) {
+        forceSyncBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm("This will clear your local browser database cache and fetch fresh data from the server/Supabase. Continue?")) {
+                try {
+                    localStorage.removeItem('portfolio_db');
+                } catch (err) {
+                    console.warn("Could not clear LocalStorage.", err);
+                }
+                const originalContent = forceSyncBtn.innerHTML;
+                forceSyncBtn.style.background = '#10b981';
+                forceSyncBtn.style.color = '#fff';
+                forceSyncBtn.innerHTML = '<i class="fas fa-check"></i> Synced!';
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
+            }
+        });
+    }
+
     // Theme Toggle Handler
     const themeToggleBtn = document.getElementById('admin-theme-toggle');
     if (themeToggleBtn) {
@@ -149,7 +171,10 @@ function injectAdminLayout() {
 
                 <div class="sidebar-footer">
                     <a href="../index.html" class="sidebar-link-btn" target="_blank"><i class="fas fa-external-link-alt"></i> View Site</a>
-                    <button class="sidebar-link-btn btn-logout" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="sidebar-link-btn" id="forceSyncBtn" style="flex: 1; margin: 0; background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.25); color: #60a5fa; padding: 12px 6px;"><i class="fas fa-sync-alt"></i> Sync</button>
+                        <button class="sidebar-link-btn btn-logout" id="logoutBtn" style="flex: 1; margin: 0; padding: 12px 6px;"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+                    </div>
                 </div>
             </aside>
             <div class="admin-overlay" id="admin-overlay"></div>
@@ -227,7 +252,70 @@ function highlightActiveLink() {
 }
 
 // Load JSON data model
+// Helper to display loading pulse animation in lists before data is fetched
+function showLoadingSkeletons() {
+    const pList = document.getElementById('portfolio-list');
+    const gList = document.getElementById('gallery-list');
+    const jList = document.getElementById('journey-list');
+
+    const skeletonCard = `
+        <div class="item-card skeleton-card" style="opacity: 0.6; pointer-events: none;">
+            <div class="card-media-wrapper skeleton-shimmer" style="background: rgba(255, 255, 255, 0.05); height: 170px;"></div>
+            <div style="margin-top: 15px;">
+                <div style="height: 16px; background: rgba(255, 255, 255, 0.05); width: 40%; border-radius: 4px; margin-bottom: 12px;" class="skeleton-shimmer"></div>
+                <div style="height: 22px; background: rgba(255, 255, 255, 0.08); width: 80%; border-radius: 4px; margin-bottom: 12px;" class="skeleton-shimmer"></div>
+                <div style="height: 14px; background: rgba(255, 255, 255, 0.05); width: 95%; border-radius: 4px; margin-bottom: 6px;" class="skeleton-shimmer"></div>
+                <div style="height: 14px; background: rgba(255, 255, 255, 0.05); width: 70%; border-radius: 4px;" class="skeleton-shimmer"></div>
+            </div>
+            <div class="item-actions" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 18px; display: flex; gap: 12px; margin-top: 20px;">
+                <div style="height: 32px; background: rgba(255, 255, 255, 0.05); flex: 1; border-radius: 8px;" class="skeleton-shimmer"></div>
+                <div style="height: 32px; background: rgba(255, 255, 255, 0.05); flex: 1; border-radius: 8px;" class="skeleton-shimmer"></div>
+            </div>
+        </div>
+    `;
+
+    const skeletonJourney = `
+        <div class="item-card skeleton-card" style="opacity: 0.6; pointer-events: none; padding: 22px;">
+            <div style="padding: 10px 0;">
+                <div style="height: 22px; background: rgba(255, 255, 255, 0.05); width: 25%; border-radius: 20px; margin-bottom: 15px;" class="skeleton-shimmer"></div>
+                <div style="height: 20px; background: rgba(255, 255, 255, 0.08); width: 60%; border-radius: 4px; margin-bottom: 12px;" class="skeleton-shimmer"></div>
+                <div style="height: 14px; background: rgba(255, 255, 255, 0.05); width: 90%; border-radius: 4px; margin-bottom: 6px;" class="skeleton-shimmer"></div>
+                <div style="height: 14px; background: rgba(255, 255, 255, 0.05); width: 75%; border-radius: 4px;" class="skeleton-shimmer"></div>
+            </div>
+            <div class="item-actions" style="border-top: 1px solid rgba(255, 255, 255, 0.05); padding-top: 18px; display: flex; gap: 12px; margin-top: 10px;">
+                <div style="height: 32px; background: rgba(255, 255, 255, 0.05); width: 80px; border-radius: 8px;" class="skeleton-shimmer"></div>
+                <div style="height: 32px; background: rgba(255, 255, 255, 0.05); width: 80px; border-radius: 8px;" class="skeleton-shimmer"></div>
+            </div>
+        </div>
+    `;
+
+    if (pList) {
+        pList.innerHTML = skeletonCard.repeat(3);
+    }
+    if (gList) {
+        gList.innerHTML = skeletonCard.repeat(3);
+    }
+    if (jList) {
+        jList.innerHTML = skeletonJourney.repeat(3);
+    }
+
+    const pCount = document.getElementById('stat-projects-count');
+    const gCount = document.getElementById('stat-gallery-count');
+    const jCount = document.getElementById('stat-journey-count');
+    const sCount = document.getElementById('stat-socials-count');
+
+    const statLoading = `<span class="skeleton-shimmer" style="display: inline-block; width: 30px; height: 30px; background: rgba(255, 255, 255, 0.1); border-radius: 6px; vertical-align: middle;"></span>`;
+    if (pCount) pCount.innerHTML = statLoading;
+    if (gCount) gCount.innerHTML = statLoading;
+    if (jCount) jCount.innerHTML = statLoading;
+    if (sCount) sCount.innerHTML = statLoading;
+}
+
+// Load JSON data model
 async function loadData() {
+    // Show loaders while fetching from network/local files
+    showLoadingSkeletons();
+
     await ensureSupabase();
 
     if (supabaseClient) {
@@ -279,17 +367,24 @@ async function loadData() {
             if (response.ok) {
                 const serverData = await response.json();
                 
-                // Compare timestamps if local data exists
-                if (localObj && localObj.last_updated && (!serverData.last_updated || localObj.last_updated > serverData.last_updated)) {
+                const localHasProjects = localObj && Array.isArray(localObj.projects) && localObj.projects.length > 0;
+                const serverHasProjects = serverData && Array.isArray(serverData.projects) && serverData.projects.length > 0;
+
+                // Compare timestamps if local data exists and actually has valid projects list
+                if (localObj && localObj.last_updated && localHasProjects && 
+                    (!serverData.last_updated || localObj.last_updated > serverData.last_updated)) {
                     console.log("Local storage contains newer edits than server file. Using local storage.");
                     currentData = localObj;
-                } else {
+                } else if (serverHasProjects) {
+                    console.log("Using server data.json file.");
                     currentData = serverData;
                     try {
                         localStorage.setItem('portfolio_db', JSON.stringify(currentData));
                     } catch (e) {
                         console.warn("Could not save to LocalStorage.", e);
                     }
+                } else {
+                    currentData = localObj || serverData;
                 }
                 
                 // Ensure structures are safe
@@ -306,8 +401,9 @@ async function loadData() {
         }
     }
 
-    // Non-server env, or server fetch failed: use localObj
-    if (localObj) {
+    // Non-server env, or server fetch failed: use localObj if it actually has data
+    const localHasProjects = localObj && Array.isArray(localObj.projects) && localObj.projects.length > 0;
+    if (localObj && localHasProjects) {
         currentData = localObj;
         if (!currentData.projects) currentData.projects = [];
         if (!currentData.gallery) currentData.gallery = [];

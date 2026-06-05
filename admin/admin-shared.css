@@ -1274,3 +1274,20 @@ body.admin-body .btn-admin {
     border: 1px solid rgba(245, 158, 11, 0.35);
     color: #fbbf24;
 }
+
+/* Skeleton Loading Shimmer Animation */
+@keyframes skeletonPulse {
+    0% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 0.3;
+    }
+}
+
+.skeleton-shimmer {
+    animation: skeletonPulse 1.5s infinite ease-in-out;
+}
