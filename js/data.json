@@ -1,0 +1,103 @@
+{
+    "projects": [
+        {
+            "id": "1",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop",
+            "title": "Modern PC Gilmore Website",
+            "description": "An Computer Retailer e-Commerce Showcase Website",
+            "tags": [
+                "HTML",
+                "CSS",
+                "JS",
+                "Google Sheet"
+            ],
+            "link": "https://google.com",
+            "status": "deployed"
+        },
+        {
+            "id": "2",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?q=80&w=800&auto=format&fit=crop",
+            "title": "New Manila Watches Website",
+            "description": "An watches showcase website",
+            "tags": [
+                "HTML",
+                "CSS",
+                "JS",
+                "Google Sheet"
+            ],
+            "link": "#",
+            "status": "deployed"
+        },
+        {
+            "id": "3",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1541417904950-b855846fe074?q=80&w=800&auto=format&fit=crop",
+            "title": "Tara Tren",
+            "description": "An community-driven mobile application designed to simplify the commuting experience across the Philippines' capital. It consolidates all major rail lines, provides real-time crowd insights, and visualizes the future of Manila's transit expansion.",
+            "tags": [
+                "Dart",
+                "C++",
+                "Swift",
+                "HTML",
+                "C",
+                "Supabase",
+                "SQL"
+            ],
+            "link": "#",
+            "status": "not-deployed"
+        }
+    ],
+    "gallery": [
+        {
+            "id": "g1",
+            "caption": "Project Brainstorming",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=1200&auto=format&fit=crop"
+        },
+        {
+            "id": "g2",
+            "caption": "Workspace Setup",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=1200&auto=format&fit=crop"
+        },
+        {
+            "id": "g3",
+            "caption": "Code Review Session",
+            "mediaType": "image",
+            "mediaUrl": "https://images.unsplash.com/photo-1522071823991-b515d777bbac?q=80&w=1200&auto=format&fit=crop"
+        }
+    ],
+    "journey": [
+        {
+            "id": "j1",
+            "year": "2022 - Present",
+            "title": "BS in Information Technology",
+            "description": "Currently pursuing my degree with a focus on full-stack development and system architecture."
+        },
+        {
+            "id": "j2",
+            "year": "2023",
+            "title": "Frontend Intern",
+            "description": "Worked on building responsive UI components and improving website performance for a local startup."
+        },
+        {
+            "id": "j3",
+            "year": "2024",
+            "title": "Hackathon Finalist",
+            "description": "Developed a real-time tracking system for emergency services during the National Tech Hackathon."
+        },
+        {
+            "id": "j4",
+            "year": "Future",
+            "title": "Software Engineer",
+            "description": "Ready to apply my skills to real-world challenges and contribute to innovative tech solutions."
+        }
+    ],
+    "socials": {
+        "github": "https://github.com/yourusername",
+        "linkedin": "https://linkedin.com/in/yourusername",
+        "twitter": "https://twitter.com/yourusername"
+    }
+}

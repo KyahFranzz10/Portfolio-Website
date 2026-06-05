@@ -242,34 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.getPortfolioData = async () => {
         const isServerEnv = window.location.protocol !== 'file:';
         
-        let localData = null;
-        try {
-            localData = localStorage.getItem('portfolio_db');
-        } catch (e) {
-            console.warn("LocalStorage is not available.", e);
-        }
-
-        let localObj = null;
-        if (localData) {
-            try {
-                localObj = JSON.parse(localData);
-            } catch (e) {
-                console.error("Failed to parse local portfolio data", e);
-            }
-        }
-
         if (isServerEnv) {
             try {
                 const response = await fetch('js/data.json?t=' + Date.now());
                 if (response.ok) {
                     const serverData = await response.json();
-                    
-                    // Compare timestamps if local data exists
-                    if (localObj && localObj.last_updated && (!serverData.last_updated || localObj.last_updated > serverData.last_updated)) {
-                        console.log("Local storage contains newer edits than server file. Using local storage.");
-                        return localObj;
-                    }
-                    
                     try {
                         localStorage.setItem('portfolio_db', JSON.stringify(serverData));
                     } catch (e) {
@@ -282,19 +259,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (localObj) {
-            return localObj;
+        // Fallback to localStorage if offline or file:// protocol
+        try {
+            const localData = localStorage.getItem('portfolio_db');
+            if (localData) {
+                return JSON.parse(localData);
+            }
+        } catch (e) {
+            console.error("Failed to parse local portfolio data", e);
         }
         
-        // Fetch fallback from data.json if no localStorage data exists
+        // Critical fallback if everything fails
         try {
             const response = await fetch('js/data.json?t=' + Date.now());
             const data = await response.json();
-            try {
-                localStorage.setItem('portfolio_db', JSON.stringify(data));
-            } catch (e) {
-                console.warn("Could not save to LocalStorage.", e);
-            }
             return data;
         } catch (e) {
             console.error("Critical error fetching dynamic database fallback:", e);
