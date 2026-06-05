@@ -239,7 +239,74 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ==========================================
        Unified LocalStorage Database Accessor
        ========================================== */
+    let supabaseClient = null;
+    let scriptsLoaded = false;
+
+    async function ensureSupabase() {
+        if (scriptsLoaded) return;
+        
+        const isServerEnv = window.location.protocol !== 'file:';
+        if (!isServerEnv) {
+            scriptsLoaded = true;
+            return;
+        }
+
+        try {
+            // Load config.js dynamically
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'js/config.js';
+                script.onload = resolve;
+                script.onerror = () => { console.warn("config.js not found, running without Supabase"); resolve(); };
+                document.head.appendChild(script);
+            });
+
+            // Load Supabase JS CDN if credentials are set
+            if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url !== "YOUR_SUPABASE_URL") {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                });
+
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+                    console.log("Supabase Client initialized successfully.");
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load or initialize Supabase:", error);
+        }
+        scriptsLoaded = true;
+    }
+
     window.getPortfolioData = async () => {
+        await ensureSupabase();
+
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('portfolio_db')
+                    .select('data')
+                    .eq('id', 1)
+                    .single();
+
+                if (error) throw error;
+                if (data && data.data) {
+                    try {
+                        localStorage.setItem('portfolio_db', JSON.stringify(data.data));
+                    } catch (e) {
+                        console.warn("Could not save to LocalStorage.", e);
+                    }
+                    return data.data;
+                }
+            } catch (err) {
+                console.error("Error fetching from Supabase, falling back to local file:", err);
+            }
+        }
+
         const isServerEnv = window.location.protocol !== 'file:';
         
         if (isServerEnv) {

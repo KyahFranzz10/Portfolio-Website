@@ -7,6 +7,49 @@
 // Central Admin State
 let currentData = { projects: [], gallery: [], journey: [], socials: { github: "", linkedin: "", twitter: "" } };
 
+let supabaseClient = null;
+let scriptsLoaded = false;
+
+async function ensureSupabase() {
+    if (scriptsLoaded) return;
+    
+    const isServerEnv = window.location.protocol !== 'file:';
+    if (!isServerEnv) {
+        scriptsLoaded = true;
+        return;
+    }
+
+    try {
+        // Load config.js dynamically from parent directory
+        await new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = '../js/config.js';
+            script.onload = resolve;
+            script.onerror = () => { console.warn("config.js not found, running without Supabase"); resolve(); };
+            document.head.appendChild(script);
+        });
+
+        // Load Supabase JS CDN if credentials are set
+        if (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.url !== "YOUR_SUPABASE_URL") {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+
+            if (typeof supabase !== 'undefined') {
+                supabaseClient = supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
+                console.log("Supabase Client initialized in Admin Console.");
+            }
+        }
+    } catch (error) {
+        console.error("Failed to load or initialize Supabase in Admin Console:", error);
+    }
+    scriptsLoaded = true;
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Inject Admin Layout Components (Header, Sidebar, Overlay)
     injectAdminLayout();
@@ -185,6 +228,32 @@ function highlightActiveLink() {
 
 // Load JSON data model
 async function loadData() {
+    await ensureSupabase();
+
+    if (supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('portfolio_db')
+                .select('data')
+                .eq('id', 1)
+                .single();
+
+            if (error) throw error;
+            if (data && data.data) {
+                currentData = data.data;
+                try {
+                    localStorage.setItem('portfolio_db', JSON.stringify(currentData));
+                } catch (e) {
+                    console.warn("Could not save to LocalStorage.", e);
+                }
+                initPageDashboard();
+                return;
+            }
+        } catch (err) {
+            console.error("Error loading data from Supabase, falling back to local files:", err);
+        }
+    }
+
     const isServerEnv = window.location.protocol !== 'file:';
     
     // Check localStorage first
@@ -289,6 +358,21 @@ async function saveDataToStorage() {
         localStorage.setItem('portfolio_db', JSON.stringify(currentData));
     } catch (e) {
         console.warn("Could not write updates to LocalStorage.", e);
+    }
+
+    if (supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient
+                .from('portfolio_db')
+                .update({ data: currentData, last_updated: new Date().toISOString() })
+                .eq('id', 1);
+
+            if (error) throw error;
+            console.log("Successfully auto-synced changes to Supabase.");
+            return;
+        } catch (err) {
+            console.error("Failed to sync changes to Supabase:", err);
+        }
     }
 
     // Automatically send update to the local dev server if running
