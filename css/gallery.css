@@ -1,0 +1,58 @@
+/* Gallery Specific CSS */
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 200px;
+    gap: 20px;
+}
+
+.gallery-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.item-1 { grid-column: 1 / 3; grid-row: 1 / 3; }
+.item-2 { grid-column: 3 / 4; grid-row: 1 / 2; }
+.item-3 { grid-column: 4 / 5; grid-row: 1 / 3; }
+.item-4 { grid-column: 3 / 4; grid-row: 2 / 3; }
+.item-5 { grid-column: 1 / 5; grid-row: 3 / 4; height: 250px;}
+
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.gallery-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    background: linear-gradient(to top, var(--clr-surface) 0%, transparent 100%);
+    transform: translateY(100%);
+    transition: var(--transition);
+    font-weight: 500;
+    color: var(--clr-text);
+}
+
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+.gallery-item:hover .gallery-caption {
+    transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-auto-rows: 200px;
+    }
+    .item-1, .item-2, .item-3, .item-4, .item-5 {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+}

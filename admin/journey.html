@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage My Journey - Admin Console</title>
+    
+    <!-- Security Auth Guard (loaded first before any render) -->
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Unified Layout Placeholders -->
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Journey Management Grid -->
+            <section class="admin-section">
+                <h2>
+                    <span><i class="fas fa-route"></i> Manage Journey Timeline</span>
+                    <button class="btn-admin btn-add" onclick="showJourneyForm()">
+                        <i class="fas fa-plus"></i> Add Event
+                    </button>
+                </h2>
+                
+                <div id="journey-list" class="item-list">
+                    <!-- Dynamically loaded timeline elements go here -->
+                </div>
+            </section>
+
+            <!-- Glassmorphic Modal Editor Form -->
+            <div id="journey-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6, 11, 25, 0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+                <div class="modal-content-panel">
+                    <h3 id="journey-form-title">Add New Timeline Event</h3>
+                    <form id="journey-admin-form">
+                        <input type="hidden" id="journey-id">
+                        
+                        <div class="form-group">
+                            <label for="journey-year">Year / Date Span</label>
+                            <input type="text" id="journey-year" required placeholder="e.g. 2022 - Present">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="journey-title">Event Title</label>
+                            <input type="text" id="journey-title" required placeholder="e.g. BS in Information Technology">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="journey-desc">Description</label>
+                            <textarea id="journey-desc" rows="4" required placeholder="Provide a summary of this academic/professional milestone..."></textarea>
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="submit" class="btn-admin btn-save">
+                                <i class="fas fa-save"></i> Save Event
+                            </button>
+                            <button type="button" class="btn-admin btn-cancel" onclick="hideJourneyForm()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="admin-shared.js"></script>
+</body>
+</html>

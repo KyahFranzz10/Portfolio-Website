@@ -1,0 +1,215 @@
+/* Portfolio Specific CSS */
+.project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.project-card {
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.project-card:hover {
+    transform: translateY(-10px);
+    border-color: var(--clr-primary-light);
+}
+
+.project-img {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    overflow: hidden;
+}
+
+.project-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.project-card:hover .project-img img {
+    transform: scale(1.1);
+}
+
+.project-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--clr-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.project-card:hover .project-overlay {
+    opacity: 1;
+}
+
+.view-btn {
+    width: 50px;
+    height: 50px;
+    background: var(--clr-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    transform: translateY(20px);
+    transition: var(--transition);
+}
+
+.project-card:hover .view-btn {
+    transform: translateY(0);
+}
+
+.project-info {
+    padding: 25px;
+}
+
+.project-tags {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.project-tags span {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    color: var(--clr-text-muted);
+}
+
+.project-info h3 {
+    margin-bottom: 10px;
+    font-size: 1.4rem;
+}
+
+.project-info p {
+    color: var(--clr-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+}
+
+.case-study-btn {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--clr-primary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: var(--transition);
+}
+
+.case-study-btn:hover {
+    color: var(--clr-accent);
+    letter-spacing: 2px;
+}
+
+@media (max-width: 768px) {
+    .project-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+    
+    .project-img {
+        height: 160px;
+    }
+    
+    .project-info {
+        padding: 15px;
+    }
+    
+    .project-info h3 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+    
+    .project-info p {
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+    }
+    
+    .project-tags {
+        gap: 4px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .project-tags span {
+        font-size: 0.65rem;
+        padding: 2px 6px;
+    }
+    
+    .case-study-btn {
+        font-size: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .project-grid {
+        gap: 10px;
+    }
+    
+    .project-img {
+        height: 120px;
+    }
+    
+    .project-info {
+        padding: 10px;
+    }
+    
+    .project-info h3 {
+        font-size: 0.95rem;
+    }
+    
+    .project-info p {
+        font-size: 0.75rem;
+        margin-bottom: 8px;
+    }
+}
+
+/* Project Tags Row & Status Tag styling */
+.project-tags-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.status-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-tag.status-deployed {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.15);
+}
+
+.status-tag.status-not-deployed {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.15);
+}
+
+.status-tag.status-in-progress {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+}
+
+

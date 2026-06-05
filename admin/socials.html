@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Socials - Admin Console</title>
+    
+    <!-- Security Auth Guard (loaded first before any render) -->
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Unified Layout Placeholders -->
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Social Media Management Component -->
+            <section class="admin-section">
+                <h2><span><i class="fas fa-share-alt"></i> Manage Social Media Profiles</span></h2>
+                
+                <form id="socials-form" style="max-width: 600px; margin: 0 auto;">
+                    <div class="form-group">
+                        <label for="social-github"><i class="fab fa-github"></i> GitHub URL</label>
+                        <input type="url" id="social-github" placeholder="https://github.com/yourusername" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="social-linkedin"><i class="fab fa-linkedin-in"></i> LinkedIn URL</label>
+                        <input type="url" id="social-linkedin" placeholder="https://linkedin.com/in/yourusername" autocomplete="off">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="social-twitter"><i class="fab fa-twitter"></i> Twitter / X URL</label>
+                        <input type="url" id="social-twitter" placeholder="https://twitter.com/yourusername" autocomplete="off">
+                    </div>
+
+                    <div style="margin-top: 35px;">
+                        <button type="submit" class="btn-admin btn-save" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 14px 28px;">
+                            <i class="fas fa-save"></i> Save Social Profiles
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="admin-shared.js"></script>
+</body>
+</html>
