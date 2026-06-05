@@ -152,24 +152,25 @@
 
 @media (max-width: 480px) {
     .project-grid {
-        gap: 10px;
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
     
     .project-img {
-        height: 120px;
+        height: 200px;
     }
     
     .project-info {
-        padding: 10px;
+        padding: 20px;
     }
     
     .project-info h3 {
-        font-size: 0.95rem;
+        font-size: 1.2rem;
     }
     
     .project-info p {
-        font-size: 0.75rem;
-        margin-bottom: 8px;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
     }
 }
 
