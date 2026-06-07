@@ -282,7 +282,30 @@ document.addEventListener('DOMContentLoaded', () => {
         scriptsLoaded = true;
     }
 
-    window.getPortfolioData = async () => {
+    // Schema Migration Guard
+    function ensureSchema(data) {
+        if (!data) data = {};
+        if (!data.projects) data.projects = [];
+        if (!data.gallery) data.gallery = [];
+        if (!data.journey) data.journey = [];
+        if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
+        if (!data.profile) {
+            data.profile = {
+                name: "Jhon Francis Garapan",
+                home_subtitle: "Graduate IT Student & Frontend Developer",
+                home_description: "Transforming ideas into robust digital solutions. Passionate about coding, problem-solving, and continuous learning in the ever-evolving world of tech.",
+                about_title: "IT Student & Developer",
+                about_p1: "I am a final-year Information Technology student passionate about frontend engineering and modern web aesthetics. I specialize in creating highly responsive, accessible, and user-friendly digital experiences.",
+                about_p2: "Whether it's crafting layouts with vanilla CSS or building custom modular interfaces, I enjoy translating complex user requirements into elegant, robust code.",
+                about_education_title: "Education & Passion",
+                about_education_p1: "I am a final-year Information Technology student with a strong foundation in web development, database management, and system analysis. My academic journey has equipped me with both theoretical knowledge and practical skills.",
+                about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer."
+            };
+        }
+        return data;
+    }
+
+    const rawGetPortfolioData = async () => {
         await ensureSupabase();
 
         if (supabaseClient) {
@@ -309,11 +332,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isServerEnv = window.location.protocol !== 'file:';
         
+        // Check localStorage first
+        let localObj = null;
+        try {
+            const localData = localStorage.getItem('portfolio_db');
+            if (localData) {
+                localObj = JSON.parse(localData);
+            }
+        } catch (e) {
+            console.error("Failed to parse local portfolio data", e);
+        }
+
         if (isServerEnv) {
             try {
                 const response = await fetch('js/data.json?t=' + Date.now());
                 if (response.ok) {
                     const serverData = await response.json();
+                    
+                    // Compare timestamps: use whichever is newer
+                    if (localObj && localObj.last_updated && 
+                        (!serverData.last_updated || localObj.last_updated > serverData.last_updated)) {
+                        console.log("LocalStorage has newer edits than server. Using localStorage.");
+                        return localObj;
+                    }
+                    
                     try {
                         localStorage.setItem('portfolio_db', JSON.stringify(serverData));
                     } catch (e) {
@@ -327,13 +369,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Fallback to localStorage if offline or file:// protocol
-        try {
-            const localData = localStorage.getItem('portfolio_db');
-            if (localData) {
-                return JSON.parse(localData);
-            }
-        } catch (e) {
-            console.error("Failed to parse local portfolio data", e);
+        if (localObj) {
+            return localObj;
         }
         
         // Critical fallback if everything fails
@@ -347,6 +384,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    window.getPortfolioData = async () => {
+        const raw = await rawGetPortfolioData();
+        return ensureSchema(raw);
+    };
+
     // Dynamic Socials Binder
     const bindDynamicSocials = async () => {
         try {
@@ -355,10 +397,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const ghLinks = document.querySelectorAll('.social-link-github');
                 const liLinks = document.querySelectorAll('.social-link-linkedin');
                 const twLinks = document.querySelectorAll('.social-link-twitter');
+                const fbLinks = document.querySelectorAll('.social-link-facebook');
 
                 ghLinks.forEach(link => { if(data.socials.github) link.href = data.socials.github; });
                 liLinks.forEach(link => { if(data.socials.linkedin) link.href = data.socials.linkedin; });
                 twLinks.forEach(link => { if(data.socials.twitter) link.href = data.socials.twitter; });
+                fbLinks.forEach(link => { if(data.socials.facebook) link.href = data.socials.facebook; });
             }
         } catch (error) {
             console.error("Error binding dynamic socials:", error);

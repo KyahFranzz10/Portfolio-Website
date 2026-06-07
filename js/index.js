@@ -10,6 +10,22 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Calling window.getPortfolioData...");
             const data = await window.getPortfolioData();
             console.log("Fetched portfolio data:", data);
+            
+            // Populate dynamic profile text fields if available
+            if (data.profile) {
+                const subEl = document.getElementById('landing-subtitle');
+                const descEl = document.getElementById('landing-description');
+                const aboutTitleEl = document.getElementById('about-preview-title');
+                const aboutP1El = document.getElementById('about-preview-p1');
+                const aboutP2El = document.getElementById('about-preview-p2');
+
+                if (subEl && data.profile.home_subtitle) subEl.innerText = data.profile.home_subtitle;
+                if (descEl && data.profile.home_description) descEl.innerText = data.profile.home_description;
+                if (aboutTitleEl && data.profile.about_title) aboutTitleEl.innerText = data.profile.about_title;
+                if (aboutP1El && data.profile.about_p1) aboutP1El.innerText = data.profile.about_p1;
+                if (aboutP2El && data.profile.about_p2) aboutP2El.innerText = data.profile.about_p2;
+            }
+
             // Get only the first 3 projects for the home page preview
             const featuredProjects = data.projects.slice(0, 3);
             console.log("Featured projects to render:", featuredProjects);

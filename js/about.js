@@ -48,6 +48,17 @@ document.addEventListener('DOMContentLoaded', () => {
     /* Fetch and render "My Journey" dynamically */
     window.getPortfolioData()
         .then(data => {
+            // Populate dynamic profile text fields if available
+            if (data.profile) {
+                const eduTitleEl = document.getElementById('about-edu-title');
+                const eduP1El = document.getElementById('about-edu-p1');
+                const eduP2El = document.getElementById('about-edu-p2');
+
+                if (eduTitleEl && data.profile.about_education_title) eduTitleEl.innerText = data.profile.about_education_title;
+                if (eduP1El && data.profile.about_education_p1) eduP1El.innerText = data.profile.about_education_p1;
+                if (eduP2El && data.profile.about_education_p2) eduP2El.innerText = data.profile.about_education_p2;
+            }
+
             if (data.journey) {
                 const timelineContainer = document.querySelector('.timeline');
                 if (timelineContainer) {

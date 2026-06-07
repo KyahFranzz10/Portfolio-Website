@@ -10,7 +10,7 @@ PORT = int(os.environ.get('PORT', 3000))
 # Global session database (in-memory)
 SESSIONS = {}
 ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'password123')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'admin123')
 
 class CosmicDevServerHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):

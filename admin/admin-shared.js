@@ -5,7 +5,7 @@
 })();
 
 // Central Admin State
-let currentData = { projects: [], gallery: [], journey: [], socials: { github: "", linkedin: "", twitter: "" } };
+let currentData = { projects: [], gallery: [], journey: [], socials: { github: "", linkedin: "", twitter: "", facebook: "" } };
 
 let supabaseClient = null;
 let scriptsLoaded = false;
@@ -166,6 +166,7 @@ function injectAdminLayout() {
                         <li><a href="gallery.html" class="sidebar-link" id="link-gallery"><i class="fas fa-images"></i> Gallery Media</a></li>
                         <li><a href="journey.html" class="sidebar-link" id="link-journey"><i class="fas fa-route"></i> My Journey</a></li>
                         <li><a href="socials.html" class="sidebar-link" id="link-socials"><i class="fas fa-share-alt"></i> Social Profiles</a></li>
+                        <li><a href="profile.html" class="sidebar-link" id="link-profile"><i class="fas fa-user-edit"></i> Profile Descriptions</a></li>
                     </ul>
                 </nav>
 
@@ -311,6 +312,29 @@ function showLoadingSkeletons() {
     if (sCount) sCount.innerHTML = statLoading;
 }
 
+// Schema Migration Guard
+function ensureSchema(data) {
+    if (!data) data = {};
+    if (!data.projects) data.projects = [];
+    if (!data.gallery) data.gallery = [];
+    if (!data.journey) data.journey = [];
+    if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
+    if (!data.profile) {
+        data.profile = {
+            name: "Jhon Francis Garapan",
+            home_subtitle: "Graduate IT Student & Frontend Developer",
+            home_description: "Transforming ideas into robust digital solutions. Passionate about coding, problem-solving, and continuous learning in the ever-evolving world of tech.",
+            about_title: "IT Student & Developer",
+            about_p1: "I am a final-year Information Technology student passionate about frontend engineering and modern web aesthetics. I specialize in creating highly responsive, accessible, and user-friendly digital experiences.",
+            about_p2: "Whether it's crafting layouts with vanilla CSS or building custom modular interfaces, I enjoy translating complex user requirements into elegant, robust code.",
+            about_education_title: "Education & Passion",
+            about_education_p1: "I am a final-year Information Technology student with a strong foundation in web development, database management, and system analysis. My academic journey has equipped me with both theoretical knowledge and practical skills.",
+            about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer."
+        };
+    }
+    return data;
+}
+
 // Load JSON data model
 async function loadData() {
     // Show loaders while fetching from network/local files
@@ -388,10 +412,7 @@ async function loadData() {
                 }
                 
                 // Ensure structures are safe
-                if (!currentData.projects) currentData.projects = [];
-                if (!currentData.gallery) currentData.gallery = [];
-                if (!currentData.journey) currentData.journey = [];
-                if (!currentData.socials) currentData.socials = { github: "", linkedin: "", twitter: "" };
+                currentData = ensureSchema(currentData);
 
                 initPageDashboard();
                 return;
@@ -405,10 +426,7 @@ async function loadData() {
     const localHasProjects = localObj && Array.isArray(localObj.projects) && localObj.projects.length > 0;
     if (localObj && localHasProjects) {
         currentData = localObj;
-        if (!currentData.projects) currentData.projects = [];
-        if (!currentData.gallery) currentData.gallery = [];
-        if (!currentData.journey) currentData.journey = [];
-        if (!currentData.socials) currentData.socials = { github: "", linkedin: "", twitter: "" };
+        currentData = ensureSchema(currentData);
 
         initPageDashboard();
         return;
@@ -419,10 +437,7 @@ async function loadData() {
         const response = await fetch('../js/data.json?t=' + Date.now());
         currentData = await response.json();
         
-        if (!currentData.projects) currentData.projects = [];
-        if (!currentData.gallery) currentData.gallery = [];
-        if (!currentData.journey) currentData.journey = [];
-        if (!currentData.socials) currentData.socials = { github: "", linkedin: "", twitter: "" };
+        currentData = ensureSchema(currentData);
 
         try {
             localStorage.setItem('portfolio_db', JSON.stringify(currentData));
@@ -432,12 +447,12 @@ async function loadData() {
         initPageDashboard();
     } catch (e) {
         console.error("No existing data model found. Starting fresh.", e);
-        currentData = { 
+        currentData = ensureSchema({ 
             projects: [], 
             gallery: [], 
             journey: [],
-            socials: { github: "https://github.com", linkedin: "https://linkedin.com", twitter: "https://twitter.com" } 
-        };
+            socials: { github: "https://github.com", linkedin: "https://linkedin.com", twitter: "https://twitter.com", facebook: "https://facebook.com" } 
+        });
         try {
             localStorage.setItem('portfolio_db', JSON.stringify(currentData));
         } catch (e) {
@@ -505,6 +520,8 @@ function initPageDashboard() {
         renderJourneyList();
     } else if (page === 'socials.html') {
         loadSocialsFields();
+    } else if (page === 'profile.html') {
+        loadProfileFields();
     }
 }
 
@@ -526,6 +543,7 @@ function renderDashboardStats() {
         if (currentData.socials.github) activeCount++;
         if (currentData.socials.linkedin) activeCount++;
         if (currentData.socials.twitter) activeCount++;
+        if (currentData.socials.facebook) activeCount++;
         sCount.innerText = activeCount;
     }
 }
@@ -597,10 +615,12 @@ function loadSocialsFields() {
     const ghInput = document.getElementById('social-github');
     const liInput = document.getElementById('social-linkedin');
     const twInput = document.getElementById('social-twitter');
+    const fbInput = document.getElementById('social-facebook');
 
     if (ghInput) ghInput.value = currentData.socials.github || '';
     if (liInput) liInput.value = currentData.socials.linkedin || '';
     if (twInput) twInput.value = currentData.socials.twitter || '';
+    if (fbInput) fbInput.value = currentData.socials.facebook || '';
 }
 
 // Save Socials Form handler
@@ -612,6 +632,11 @@ if (socialsForm) {
         currentData.socials.github = document.getElementById('social-github').value.trim();
         currentData.socials.linkedin = document.getElementById('social-linkedin').value.trim();
         currentData.socials.twitter = document.getElementById('social-twitter').value.trim();
+        
+        const fbEl = document.getElementById('social-facebook');
+        if (fbEl) {
+            currentData.socials.facebook = fbEl.value.trim();
+        }
 
         // Automatically persist changes to local storage
         saveDataToStorage();
@@ -916,6 +941,66 @@ function deleteJourneyItem(id) {
 
 function editJourneyItem(id) {
     showJourneyForm(id);
+}
+
+// Profile descriptions load and save functions
+function loadProfileFields() {
+    const subInput = document.getElementById('profile-home-subtitle');
+    const descInput = document.getElementById('profile-home-description');
+    const aboutTitleInput = document.getElementById('profile-about-title');
+    const aboutP1Input = document.getElementById('profile-about-p1');
+    const aboutP2Input = document.getElementById('profile-about-p2');
+    const eduTitleInput = document.getElementById('profile-about-education-title');
+    const eduP1Input = document.getElementById('profile-about-education-p1');
+    const eduP2Input = document.getElementById('profile-about-education-p2');
+
+    if (!currentData.profile) {
+        currentData.profile = {};
+    }
+
+    if (subInput) subInput.value = currentData.profile.home_subtitle || '';
+    if (descInput) descInput.value = currentData.profile.home_description || '';
+    if (aboutTitleInput) aboutTitleInput.value = currentData.profile.about_title || '';
+    if (aboutP1Input) aboutP1Input.value = currentData.profile.about_p1 || '';
+    if (aboutP2Input) aboutP2Input.value = currentData.profile.about_p2 || '';
+    if (eduTitleInput) eduTitleInput.value = currentData.profile.about_education_title || '';
+    if (eduP1Input) eduP1Input.value = currentData.profile.about_education_p1 || '';
+    if (eduP2Input) eduP2Input.value = currentData.profile.about_education_p2 || '';
+}
+
+// Profile Form submit handler
+const profileForm = document.getElementById('profile-form');
+if (profileForm) {
+    profileForm.onsubmit = (e) => {
+        e.preventDefault();
+        
+        if (!currentData.profile) {
+            currentData.profile = {};
+        }
+
+        currentData.profile.home_subtitle = document.getElementById('profile-home-subtitle').value.trim();
+        currentData.profile.home_description = document.getElementById('profile-home-description').value.trim();
+        currentData.profile.about_title = document.getElementById('profile-about-title').value.trim();
+        currentData.profile.about_p1 = document.getElementById('profile-about-p1').value.trim();
+        currentData.profile.about_p2 = document.getElementById('profile-about-p2').value.trim();
+        currentData.profile.about_education_title = document.getElementById('profile-about-education-title').value.trim();
+        currentData.profile.about_education_p1 = document.getElementById('profile-about-education-p1').value.trim();
+        currentData.profile.about_education_p2 = document.getElementById('profile-about-education-p2').value.trim();
+
+        // Persist to storage
+        saveDataToStorage();
+
+        // Show feedback
+        const submitBtn = profileForm.querySelector('button[type="submit"]');
+        const origText = submitBtn.innerHTML;
+        submitBtn.style.background = '#10b981';
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Profile Saved!';
+        
+        setTimeout(() => {
+            submitBtn.style.background = '';
+            submitBtn.innerHTML = origText;
+        }, 2000);
+    };
 }
 
 

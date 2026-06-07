@@ -95,9 +95,21 @@
             "description": "Ready to apply my skills to real-world challenges and contribute to innovative tech solutions."
         }
     ],
+    "profile": {
+        "name": "Jhon Francis Garapan",
+        "home_subtitle": "Graduate IT Student & Frontend Developer",
+        "home_description": "Transforming ideas into robust digital solutions. Passionate about coding, problem-solving, and continuous learning in the ever-evolving world of tech.",
+        "about_title": "IT Student & Developer",
+        "about_p1": "I am a final-year Information Technology student passionate about frontend engineering and modern web aesthetics. I specialize in creating highly responsive, accessible, and user-friendly digital experiences.",
+        "about_p2": "Whether it's crafting layouts with vanilla CSS or building custom modular interfaces, I enjoy translating complex user requirements into elegant, robust code.",
+        "about_education_title": "Education & Passion",
+        "about_education_p1": "I am a final-year Information Technology student with a strong foundation in web development, database management, and system analysis. My academic journey has equipped me with both theoretical knowledge and practical skills.",
+        "about_education_p2": "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer."
+    },
     "socials": {
         "github": "https://github.com/yourusername",
         "linkedin": "https://linkedin.com/in/yourusername",
-        "twitter": "https://twitter.com/yourusername"
+        "twitter": "https://twitter.com/yourusername",
+        "facebook": "https://facebook.com/yourusername"
     }
 }

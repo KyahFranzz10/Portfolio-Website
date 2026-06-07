@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Descriptions - Admin Console</title>
+    
+    <!-- Security Auth Guard (loaded first before any render) -->
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Unified Layout Placeholders -->
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Descriptions Management Panel -->
+            <section class="admin-section">
+                <h2><span><i class="fas fa-user-edit"></i> Edit Profile Descriptions</span></h2>
+                
+                <form id="profile-form" style="max-width: 750px; margin: 0 auto;">
+                    
+                    <h3 style="color: var(--clr-accent); margin: 25px 0 15px; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;"><i class="fas fa-home"></i> Home Page Hero Section</h3>
+                    
+                    <div class="form-group">
+                        <label for="profile-home-subtitle">Landing Subtitle</label>
+                        <input type="text" id="profile-home-subtitle" placeholder="e.g. Graduate IT Student & Frontend Developer" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-home-description">Landing Description</label>
+                        <textarea id="profile-home-description" rows="3" placeholder="Tell visitors about your primary skills and goals..." required></textarea>
+                    </div>
+
+                    <h3 style="color: var(--clr-accent); margin: 35px 0 15px; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;"><i class="fas fa-user"></i> Home Page About Preview</h3>
+
+                    <div class="form-group">
+                        <label for="profile-about-title">About Section Title</label>
+                        <input type="text" id="profile-about-title" placeholder="e.g. IT Student & Developer" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-about-p1">About Preview Paragraph 1</label>
+                        <textarea id="profile-about-p1" rows="3" placeholder="First paragraph describing yourself..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-about-p2">About Preview Paragraph 2</label>
+                        <textarea id="profile-about-p2" rows="3" placeholder="Second paragraph describing yourself..." required></textarea>
+                    </div>
+
+                    <h3 style="color: var(--clr-accent); margin: 35px 0 15px; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;"><i class="fas fa-graduation-cap"></i> About Page Detailed Section</h3>
+
+                    <div class="form-group">
+                        <label for="profile-about-education-title">Education Section Title</label>
+                        <input type="text" id="profile-about-education-title" placeholder="e.g. Education & Passion" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-about-education-p1">Education Detail Paragraph 1</label>
+                        <textarea id="profile-about-education-p1" rows="3" placeholder="Academic details paragraph 1..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profile-about-education-p2">Education Detail Paragraph 2</label>
+                        <textarea id="profile-about-education-p2" rows="3" placeholder="Academic details paragraph 2..." required></textarea>
+                    </div>
+
+                    <div style="margin-top: 45px;">
+                        <button type="submit" class="btn-admin btn-save" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 14px 28px;">
+                            <i class="fas fa-save"></i> Save Profile Descriptions
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="admin-shared.js"></script>
+</body>
+</html>
