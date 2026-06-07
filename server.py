@@ -5,12 +5,12 @@ import urllib.parse
 import http.cookies
 import uuid
 
-PORT = 3000
+PORT = int(os.environ.get('PORT', 3000))
 
 # Global session database (in-memory)
 SESSIONS = {}
-ADMIN_USERNAME = 'admin'
-ADMIN_PASSWORD = 'password123'
+ADMIN_USERNAME = os.environ.get('ADMIN_USERNAME', 'admin')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'password123')
 
 class CosmicDevServerHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -55,6 +55,16 @@ class CosmicDevServerHandler(http.server.SimpleHTTPRequestHandler):
         parsed_url = urllib.parse.urlparse(self.path)
         decoded_path = urllib.parse.unquote(parsed_url.path)
         normalized_path = os.path.normpath(decoded_path).replace('\\', '/').lower()
+        
+        # Intercept auth check API call
+        if parsed_url.path == '/api/check-auth':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            authenticated = self.is_authenticated()
+            response = {'authenticated': authenticated}
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            return
         
         if not normalized_path.startswith('/'):
             normalized_path = '/' + normalized_path

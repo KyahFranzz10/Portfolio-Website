@@ -35,11 +35,11 @@
 
 /* Base Body Layout */
 body.admin-body {
+    display: none;
     background: var(--clr-bg-deep);
     color: var(--clr-text);
     font-family: 'Outfit', sans-serif;
     min-height: 100vh;
-    display: flex;
     flex-direction: row;
     /* Row flex to align left sidebar & right content */
     position: relative;

@@ -92,41 +92,65 @@
                 setTimeout(() => card.classList.remove('shake'), 500);
             };
 
+            // Detect if the Python server auth API is actually active
+            let serverAuthActive = false;
             try {
-                // Try server-side authentication
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ username: user, password: pass })
-                });
+                const checkRes = await fetch('/api/check-auth');
+                if (checkRes.ok) {
+                    serverAuthActive = true;
+                }
+            } catch (err) {
+                console.log("Server auth check failed, using client-side fallback.");
+            }
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.success) {
-                        sessionStorage.setItem('admin_logged_in', 'true');
-                        window.location.href = 'index.html';
+            if (serverAuthActive) {
+                try {
+                    // Try server-side authentication
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username: user, password: pass })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            sessionStorage.setItem('admin_logged_in', 'true');
+                            window.location.href = 'index.html';
+                        } else {
+                            showError();
+                        }
                     } else {
                         showError();
                     }
-                } else if (response.status === 401) {
+                } catch (err) {
+                    console.error("Server authentication failed:", err);
                     showError();
-                } else {
-                    // Fall back to client-side auth if server returns other errors (e.g. 404/500)
-                    console.warn("Server API returned error. Falling back to client-side authentication.");
-                    fallbackClientAuth(user, pass, showError);
                 }
-            } catch (err) {
-                // Network error (server offline) -> fall back to client-side check
-                console.warn("Server is offline or unreachable. Falling back to client-side authentication.");
-                fallbackClientAuth(user, pass, showError);
+            } else {
+                // Fall back to client-side check if server is offline or serving static files
+                console.warn("Using client-side fallback authentication.");
+                await fallbackClientAuth(user, pass, showError);
             }
         });
 
+        // SHA-256 hashing utility using native browser Crypto API
+        async function sha256(message) {
+            const msgBuffer = new TextEncoder().encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
         // Offline / Static Fallback Authentication
-        function fallbackClientAuth(user, pass, showError) {
-            if (user === 'admin' && pass === 'password123') {
+        async function fallbackClientAuth(user, pass, showError) {
+            const passHash = await sha256(pass);
+            // SHA-256 hash of 'password123'
+            const expectedHash = 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f';
+            
+            if (user === 'admin' && passHash === expectedHash) {
                 sessionStorage.setItem('admin_logged_in', 'true');
                 window.location.href = 'index.html';
             } else {
