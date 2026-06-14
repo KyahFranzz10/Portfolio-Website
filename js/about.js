@@ -57,6 +57,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (eduTitleEl && data.profile.about_education_title) eduTitleEl.innerText = data.profile.about_education_title;
                 if (eduP1El && data.profile.about_education_p1) eduP1El.innerText = data.profile.about_education_p1;
                 if (eduP2El && data.profile.about_education_p2) eduP2El.innerText = data.profile.about_education_p2;
+
+                const skillsTitleEl = document.getElementById('about-skills-title');
+                const skillsListEl = document.getElementById('about-skills-list');
+
+                if (skillsTitleEl && data.profile.about_skills_title) {
+                    skillsTitleEl.innerText = data.profile.about_skills_title;
+                }
+
+                if (skillsListEl && data.profile.about_skills_list) {
+                    skillsListEl.innerHTML = '';
+                    data.profile.about_skills_list.forEach(skill => {
+                        const span = document.createElement('span');
+                        span.className = 'skill-tag';
+                        span.innerText = skill;
+                        skillsListEl.appendChild(span);
+                    });
+                }
             }
 
             if (data.journey) {

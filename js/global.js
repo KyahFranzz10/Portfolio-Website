@@ -120,16 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
        Chatbot Logic
        ========================================== */
     const initChatbot = () => {
-        const knowledgeBase = [
-            { keywords: ['hi', 'hello', 'hey', 'greetings', 'morning'], responses: ["Hello! I'm Jhon's Portfolio Bot.", "Hey there! Looking for anything specific?"], chips: ["About", "Skills", "Contact"] },
-            { keywords: ['skill', 'tech', 'stack', 'language', 'know', 'html', 'css', 'javascript', 'php', 'laravel', 'firebase', 'supabase', 'hostinger', 'dart', 'flutter', 'c', 'c++', 'c#', 'n8n', 'automation'], responses: ["I am highly skilled in Frontend (HTML, CSS, JS, React), Backend/Systems (Node.js, Python, PHP/Laravel, C, C++, C#), Mobile Development (Dart, Flutter), Databases and Hosting (MySQL, Firebase, Supabase, Hostinger), Workflow Automation (n8n), and also experienced in productivity/creative tools like Microsoft Office, Adobe Suite, and OBS Studio.", "My tech stack revolves around modern web tech, systems, mobile development (React, Flutter, Laravel, Python, C/C++, C#, MySQL, Firebase, Supabase, Hostinger), workflow automation (n8n), plus media tools like OBS Studio, Adobe Suite, and Microsoft Office."], chips: ["Projects", "About"] },
-            { keywords: ['project', 'work', 'portfolio', 'built', 'made', 'experience'], responses: ["I've developed an E-commerce App, an interactive Data Dashboard, and an Inventory System.", "My favorite project so far is the real-time Data Dashboard."], chips: ["Gallery", "Skills"] },
-            { keywords: ['about', 'who', 'background', 'education', 'study'], responses: ["I am a graduating IT student specializing in full-stack development. I love turning complex problems into beautiful web apps.", "As a final-year IT student, my focus has been largely on software engineering, algorithms, and pushing boundaries in web development."], chips: ["Education", "Projects"] },
-            { keywords: ['education', 'university', 'college', 'school'], responses: ["I am pursuing a degree in Information Technology. Over the course of my studies, I've engaged in multiple hackathons and practical seminars."], chips: ["Gallery", "Contact"] },
-            { keywords: ['contact', 'email', 'phone', 'hire', 'reach', 'touch'], responses: ["You can reach out directly at student@university.edu or use the form on the Contact page.", "I'm open to opportunities! Shoot an email to student@university.edu."], chips: [] },
-            { keywords: ['bye', 'goodbye', 'thanks', 'thank', 'later', 'quit'], responses: ["You're welcome! Let me know if you need anything else.", "Goodbye! Have a great day."], chips: [] }
-        ];
-
         if (!document.getElementById('chatbot-container')) {
             const chatbotHTML = `
             <div class="chatbot-container" id="chatbot-container">
@@ -141,21 +131,16 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="cb-header-title">
                             <div class="cb-avatar"><i class="fas fa-robot"></i></div>
                             <div>
-                                <h4>Jhon's Assistant</h4>
+                                <h4>Franzz</h4>
                                 <span class="cb-status">Online</span>
                             </div>
                         </div>
-                        <div class="chatbot-close" id="chatbot-close"><i class="fas fa-times"></i></div>
+                        <div class="chatbot-actions">
+                            <div class="chatbot-clear" id="chatbot-clear" title="Clear Chat"><i class="fas fa-trash-alt"></i></div>
+                            <div class="chatbot-close" id="chatbot-close"><i class="fas fa-times"></i></div>
+                        </div>
                     </div>
                     <div class="chatbot-body" id="chatbot-body">
-                        <div class="chat-msg bot-msg">
-                            Hi there! 👋 I'm the virtual assistant. I can answer questions about skills, projects, and contact info. What would you like to know?
-                            <div class="chat-chips" id="initial-chips">
-                                <span class="chip">Skills</span>
-                                <span class="chip">Projects</span>
-                                <span class="chip">Contact</span>
-                            </div>
-                        </div>
                         <div class="typing-indicator" id="chatbot-typing">
                             <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
                         </div>
@@ -171,15 +156,59 @@ document.addEventListener('DOMContentLoaded', () => {
             const cbToggle = document.getElementById('chatbot-toggle');
             const cbWindow = document.getElementById('chatbot-window');
             const cbClose = document.getElementById('chatbot-close');
+            const cbClear = document.getElementById('chatbot-clear');
             const cbBody = document.getElementById('chatbot-body');
             const cbInput = document.getElementById('chatbot-input-field');
             const cbSend = document.getElementById('chatbot-send-btn');
             const cbTyping = document.getElementById('chatbot-typing');
 
-            cbToggle.addEventListener('click', () => { cbWindow.classList.toggle('active'); });
+            // Toggle logic
+            cbToggle.addEventListener('click', () => { 
+                cbWindow.classList.toggle('active'); 
+                if(cbWindow.classList.contains('active')) {
+                    setTimeout(() => cbInput.focus(), 100);
+                }
+            });
             cbClose.addEventListener('click', () => { cbWindow.classList.remove('active'); });
 
-            function addMessage(text, sender, chips = []) {
+            // History management
+            const STORAGE_KEY = 'jhon_chatbot_history';
+            
+            function formatTime() {
+                const d = new Date();
+                let hours = d.getHours();
+                let minutes = d.getMinutes();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12;
+                hours = hours ? hours : 12; 
+                minutes = minutes < 10 ? '0'+minutes : minutes;
+                return hours + ':' + minutes + ' ' + ampm;
+            }
+
+            function saveHistory() {
+                const messages = [];
+                const msgs = Array.from(cbBody.querySelectorAll('.chat-msg-wrapper')).slice(-20);
+                msgs.forEach(w => {
+                    const msgEl = w.querySelector('.chat-msg');
+                    const isBot = msgEl.classList.contains('bot-msg');
+                    
+                    const clonedMsg = msgEl.cloneNode(true);
+                    const chipsDiv = clonedMsg.querySelector('.chat-chips');
+                    if(chipsDiv) chipsDiv.remove();
+                    
+                    messages.push({
+                        text: clonedMsg.innerHTML,
+                        sender: isBot ? 'bot' : 'user',
+                        time: w.querySelector('.chat-msg-time').innerText
+                    });
+                });
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+            }
+
+            function addMessage(text, sender, chips = [], time = formatTime(), save = true) {
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('chat-msg-wrapper', sender === 'bot' ? 'bot-msg-wrapper' : 'user-msg-wrapper');
+
                 const msg = document.createElement('div');
                 msg.classList.add('chat-msg', sender === 'bot' ? 'bot-msg' : 'user-msg');
                 msg.innerHTML = text;
@@ -190,31 +219,86 @@ document.addEventListener('DOMContentLoaded', () => {
                     chips.forEach(chipText => {
                         const chip = document.createElement('span');
                         chip.className = 'chip';
-                        chip.textContent = chipText;
-                        chip.onclick = () => { cbInput.value = chipText; handleSend(); };
+                        chip.innerHTML = chipText;
+                        const plainText = chip.textContent;
+                        chip.onclick = () => { cbInput.value = plainText; handleSend(); };
                         chipsDiv.appendChild(chip);
                     });
                     msg.appendChild(chipsDiv);
                 }
 
-                cbBody.insertBefore(msg, cbTyping);
+                const timeEl = document.createElement('span');
+                timeEl.className = 'chat-msg-time';
+                timeEl.innerText = time;
+
+                wrapper.appendChild(msg);
+                wrapper.appendChild(timeEl);
+
+                cbBody.insertBefore(wrapper, cbTyping);
                 cbBody.scrollTop = cbBody.scrollHeight;
+
+                if(save) saveHistory();
             }
 
-            function botReply(userText) {
+            function loadHistory() {
+                const history = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
+                if (history.length === 0) {
+                    // Initial Greeting
+                    addMessage(
+                        "Hi there! 👋 I'm Franzz, a simple pre-programmed widget (not a literal AI bot, just a fun way to explore my site 😅). I can answer questions about my skills, projects, and contact info. What would you like to know?",
+                        'bot',
+                        ["Skills", "Projects", "Contact"]
+                    );
+                } else {
+                    history.forEach(m => addMessage(m.text, m.sender, [], m.time, false));
+                }
+            }
+
+            cbClear.addEventListener('click', () => {
+                sessionStorage.removeItem(STORAGE_KEY);
+                const msgs = cbBody.querySelectorAll('.chat-msg-wrapper');
+                msgs.forEach(m => m.remove());
+                loadHistory(); 
+            });
+
+            async function botReply(userText) {
                 cbTyping.classList.add('active');
                 cbBody.scrollTop = cbBody.scrollHeight;
 
-                let responseText = "I'm still learning! Try asking about my 'skills', 'projects', or 'education'.";
-                let responseChips = ["Skills", "Projects", "Education"];
-                
                 const txt = userText.toLowerCase();
-                for (const intent of knowledgeBase) {
-                    if (intent.keywords.some(kw => txt.includes(kw))) {
-                        responseText = intent.responses[Math.floor(Math.random() * intent.responses.length)];
-                        responseChips = intent.chips;
-                        break;
+                let responseText = "I'm not quite sure about that! Try asking about my <br><strong>skills</strong>, <strong>projects</strong>, or <strong>education</strong>.";
+                let responseChips = ["Skills", "Projects", "About Me", "Contact"];
+
+                try {
+                    const data = typeof window.getPortfolioData === 'function' ? await window.getPortfolioData() : {};
+                    
+                    if (txt.includes('skill') || txt.includes('tech') || txt.includes('stack') || txt.includes('language')) {
+                        responseText = "I am highly skilled in Frontend (HTML, CSS, JS, React), Backend/Systems (Node.js, Python, PHP/Laravel, C, C++, C#), Mobile Development (Dart, Flutter), Databases and Hosting (MySQL, Firebase, Supabase, Hostinger), Workflow Automation (n8n), and also experienced in productivity/creative tools like Microsoft Office, Adobe Suite, and OBS Studio.";
+                        responseChips = ["Show Projects", "About Me"];
+                    } else if (txt.includes('project') || txt.includes('work') || txt.includes('portfolio') || txt.includes('built') || txt.includes('made') || txt.includes('experience')) {
+                        const projects = data.projects || [];
+                        if(projects.length > 0) {
+                            const projectNames = projects.slice(0, 3).map(p => `<strong>${p.title}</strong>`).join(', ');
+                            responseText = `Some of my recent projects include: ${projectNames}. You can see them all in the <a href="portfolio.html">Portfolio</a> section!`;
+                        } else {
+                            responseText = "I've developed an E-commerce App, an interactive Data Dashboard, and an Inventory System. Check out my <a href='portfolio.html'>Portfolio page</a>!";
+                        }
+                        responseChips = ["Skills", "Education"];
+                    } else if (txt.includes('about') || txt.includes('who') || txt.includes('background') || txt.includes('education') || txt.includes('study')) {
+                        responseText = data.profile?.about_p1 || "I am a graduating IT student specializing in full-stack development. I love turning complex problems into beautiful web apps.";
+                        responseChips = ["Skills", "Contact"];
+                    } else if (txt.includes('contact') || txt.includes('email') || txt.includes('phone') || txt.includes('reach') || txt.includes('hire')) {
+                        responseText = `You can reach out via my <a href="contact.html">Contact Form</a> or connect with me on <a href="${data.socials?.linkedin || '#'}">LinkedIn</a>!`;
+                        responseChips = [];
+                    } else if (txt.includes('hi') || txt.includes('hello') || txt.includes('hey') || txt.includes('greetings')) {
+                        responseText = "Hello! Looking for anything specific?";
+                        responseChips = ["About Me", "Projects"];
+                    } else if (txt.includes('bye') || txt.includes('thanks') || txt.includes('thank')) {
+                        responseText = "You're welcome! Have a great day!";
+                        responseChips = [];
                     }
+                } catch (e) {
+                    console.error("Chatbot logic error:", e);
                 }
 
                 setTimeout(() => { 
@@ -233,6 +317,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             cbSend.addEventListener('click', handleSend);
             cbInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') handleSend(); });
+
+            loadHistory();
         }
     };
 
@@ -288,6 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data.projects) data.projects = [];
         if (!data.gallery) data.gallery = [];
         if (!data.journey) data.journey = [];
+        if (!data.messages) data.messages = [];
         if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
         if (!data.profile) {
             data.profile = {

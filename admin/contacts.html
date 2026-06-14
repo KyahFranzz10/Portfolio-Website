@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Contacts - Admin Console</title>
+    
+    <!-- Security Auth Guard (loaded first before any render) -->
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Unified Layout Placeholders -->
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Contact Management Component -->
+            <section class="admin-section">
+                <h2><span><i class="fas fa-address-book"></i> Manage Contact Info</span></h2>
+                
+                <form id="contacts-form" style="max-width: 600px; margin: 0 auto;">
+                    <div class="form-group">
+                        <label for="contact-email"><i class="fas fa-envelope"></i> Email Address</label>
+                        <input type="email" id="contact-email" placeholder="student@university.edu" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-phone"><i class="fas fa-phone-alt"></i> Phone Number</label>
+                        <input type="tel" id="contact-phone" placeholder="+1 (234) 567-8900" autocomplete="off" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contact-location"><i class="fas fa-map-marker-alt"></i> Location</label>
+                        <input type="text" id="contact-location" placeholder="Tech City, State, Country" autocomplete="off" required>
+                    </div>
+
+                    <div style="margin-top: 35px;">
+                        <button type="submit" class="btn-admin btn-save" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 14px 28px;">
+                            <i class="fas fa-save"></i> Save Contact Info
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="admin-shared.js?v=2"></script>
+</body>
+</html>

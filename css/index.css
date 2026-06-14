@@ -246,7 +246,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    color: var(--clr-primary-light);
+    color: var(--clr-text);
 }
 
 .skill-tags {
@@ -258,7 +258,7 @@
 .skill-tag {
     background: rgba(59, 130, 246, 0.08);
     border: 1px solid rgba(59, 130, 246, 0.2);
-    color: var(--clr-accent);
+    color: var(--clr-text);
     padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.95rem;

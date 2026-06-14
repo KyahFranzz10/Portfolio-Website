@@ -190,6 +190,43 @@ class CosmicDevServerHandler(http.server.SimpleHTTPRequestHandler):
                 response = {'success': False, 'error': str(e)}
                 self.wfile.write(json.dumps(response).encode('utf-8'))
                 print(f"Error handling /api/save: {e}")
+
+        elif self.path == '/api/message':
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                msg_data = json.loads(post_data.decode('utf-8'))
+                
+                import time
+                msg_data['timestamp'] = int(time.time() * 1000)
+                
+                file_path = os.path.join(os.getcwd(), 'js', 'data.json')
+                db = {}
+                if os.path.exists(file_path):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        db = json.load(f)
+                        
+                if 'messages' not in db:
+                    db['messages'] = []
+                    
+                db['messages'].insert(0, msg_data)
+                
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    json.dump(db, f, indent=4, ensure_ascii=False)
+                    
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                response = {'success': True}
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                print("Successfully saved new contact message.")
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                response = {'success': False, 'error': str(e)}
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                print(f"Error handling /api/message: {e}")
         else:
             self.send_response(404)
             self.end_headers()

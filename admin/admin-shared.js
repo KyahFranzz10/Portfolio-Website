@@ -166,6 +166,8 @@ function injectAdminLayout() {
                         <li><a href="gallery.html" class="sidebar-link" id="link-gallery"><i class="fas fa-images"></i> Gallery Media</a></li>
                         <li><a href="journey.html" class="sidebar-link" id="link-journey"><i class="fas fa-route"></i> My Journey</a></li>
                         <li><a href="socials.html" class="sidebar-link" id="link-socials"><i class="fas fa-share-alt"></i> Social Profiles</a></li>
+                        <li><a href="contacts.html" class="sidebar-link" id="link-contacts"><i class="fas fa-address-book"></i> Contact Info</a></li>
+                        <li><a href="messages.html" class="sidebar-link" id="link-messages"><i class="fas fa-inbox"></i> Messages</a></li>
                         <li><a href="profile.html" class="sidebar-link" id="link-profile"><i class="fas fa-user-edit"></i> Profile Descriptions</a></li>
                     </ul>
                 </nav>
@@ -318,7 +320,9 @@ function ensureSchema(data) {
     if (!data.projects) data.projects = [];
     if (!data.gallery) data.gallery = [];
     if (!data.journey) data.journey = [];
+    if (!data.messages) data.messages = [];
     if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
+    if (!data.contact) data.contact = { email: "student@university.edu", phone: "+1 (234) 567-8900", location: "Tech City, State, Country" };
     if (!data.profile) {
         data.profile = {
             name: "Jhon Francis Garapan",
@@ -329,8 +333,13 @@ function ensureSchema(data) {
             about_p2: "Whether it's crafting layouts with vanilla CSS or building custom modular interfaces, I enjoy translating complex user requirements into elegant, robust code.",
             about_education_title: "Education & Passion",
             about_education_p1: "I am a final-year Information Technology student with a strong foundation in web development, database management, and system analysis. My academic journey has equipped me with both theoretical knowledge and practical skills.",
-            about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer."
+            about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer.",
+            about_skills_title: "Core Competencies",
+            about_skills_list: ["Web Development", "UI/UX Design", "Database Management", "Problem Solving", "Agile Methodologies"]
         };
+    } else if (!data.profile.about_skills_list) {
+        data.profile.about_skills_title = "Core Competencies";
+        data.profile.about_skills_list = ["Web Development", "UI/UX Design", "Database Management", "Problem Solving", "Agile Methodologies"];
     }
     return data;
 }
@@ -480,7 +489,6 @@ async function saveDataToStorage() {
 
             if (error) throw error;
             console.log("Successfully auto-synced changes to Supabase.");
-            return;
         } catch (err) {
             console.error("Failed to sync changes to Supabase:", err);
         }
@@ -520,6 +528,10 @@ function initPageDashboard() {
         renderJourneyList();
     } else if (page === 'socials.html') {
         loadSocialsFields();
+    } else if (page === 'contacts.html') {
+        loadContactsFields();
+    } else if (page === 'messages.html') {
+        renderMessagesList();
     } else if (page === 'profile.html') {
         loadProfileFields();
     }
@@ -646,6 +658,118 @@ if (socialsForm) {
         const origText = submitBtn.innerHTML;
         submitBtn.style.background = '#10b981';
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Socials Saved!';
+        
+        setTimeout(() => {
+            submitBtn.style.background = '';
+            submitBtn.innerHTML = origText;
+        }, 2000);
+    };
+}
+
+/* ==========================================
+   4c. Messages Management (messages.html)
+   ========================================== */
+function renderMessagesList() {
+    const list = document.getElementById('messages-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    
+    // Combine server messages with offline localStorage messages just in case
+    let msgs = currentData.messages || [];
+    let offlineMsgs = [];
+    try {
+        offlineMsgs = JSON.parse(localStorage.getItem('portfolio_messages')) || [];
+    } catch(e) {}
+    
+    // Merge offline messages that aren't already in the server data
+    offlineMsgs.forEach(off => {
+        if (!msgs.find(m => m.timestamp === off.timestamp)) {
+            msgs.push(off);
+        }
+    });
+    
+    msgs.sort((a, b) => b.timestamp - a.timestamp);
+
+    if (msgs.length === 0) {
+        list.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--text-dim);">No messages received yet.</p>';
+        return;
+    }
+
+    msgs.forEach(msg => {
+        const item = document.createElement('div');
+        item.className = 'admin-item-card';
+        
+        const dateStr = msg.timestamp ? new Date(msg.timestamp).toLocaleString() : 'Unknown Date';
+
+        item.innerHTML = `
+            <div class="item-content" style="width: 100%;">
+                <h4 style="margin-bottom: 5px;">${msg.subject || 'No Subject'}</h4>
+                <p style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 10px;">
+                    <strong>From:</strong> ${msg.name || 'Anonymous'} &lt;${msg.email || 'N/A'}&gt; <br>
+                    <strong>Date:</strong> ${dateStr}
+                </p>
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap;">${msg.message || ''}</div>
+            </div>
+            <div class="item-actions" style="align-items: flex-end; justify-content: flex-start; padding-top: 10px;">
+                <button class="btn-admin btn-delete" onclick="deleteMessage(${msg.timestamp})" title="Delete Message"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        `;
+        list.appendChild(item);
+    });
+}
+
+window.deleteMessage = function(timestamp) {
+    if (confirm("Are you sure you want to delete this message?")) {
+        if (currentData.messages) {
+            currentData.messages = currentData.messages.filter(m => m.timestamp !== timestamp);
+        }
+        
+        // Also remove from offline storage
+        try {
+            let offlineMsgs = JSON.parse(localStorage.getItem('portfolio_messages')) || [];
+            offlineMsgs = offlineMsgs.filter(m => m.timestamp !== timestamp);
+            localStorage.setItem('portfolio_messages', JSON.stringify(offlineMsgs));
+        } catch(e) {}
+        
+        saveDataToStorage().then(() => renderMessagesList());
+    }
+};
+
+/* ==========================================
+   5. Profile Info Management (profile.html)
+   ========================================== */
+function loadContactsFields() {
+    const emailInput = document.getElementById('contact-email');
+    const phoneInput = document.getElementById('contact-phone');
+    const locationInput = document.getElementById('contact-location');
+
+    if (!currentData.contact) {
+        currentData.contact = { email: "", phone: "", location: "" };
+    }
+
+    if (emailInput) emailInput.value = currentData.contact.email || '';
+    if (phoneInput) phoneInput.value = currentData.contact.phone || '';
+    if (locationInput) locationInput.value = currentData.contact.location || '';
+}
+
+const contactsForm = document.getElementById('contacts-form');
+if (contactsForm) {
+    contactsForm.onsubmit = (e) => {
+        e.preventDefault();
+        
+        if (!currentData.contact) currentData.contact = {};
+        
+        currentData.contact.email = document.getElementById('contact-email').value.trim();
+        currentData.contact.phone = document.getElementById('contact-phone').value.trim();
+        currentData.contact.location = document.getElementById('contact-location').value.trim();
+
+        saveDataToStorage();
+
+        const submitBtn = contactsForm.querySelector('button[type="submit"]');
+        const origText = submitBtn.innerHTML;
+        submitBtn.style.background = '#10b981';
+        submitBtn.innerHTML = '<i class="fas fa-check"></i> Contacts Saved!';
         
         setTimeout(() => {
             submitBtn.style.background = '';
@@ -966,6 +1090,14 @@ function loadProfileFields() {
     if (eduTitleInput) eduTitleInput.value = currentData.profile.about_education_title || '';
     if (eduP1Input) eduP1Input.value = currentData.profile.about_education_p1 || '';
     if (eduP2Input) eduP2Input.value = currentData.profile.about_education_p2 || '';
+    
+    const skillsTitleInput = document.getElementById('profile-about-skills-title');
+    const skillsListInput = document.getElementById('profile-about-skills-list');
+    
+    if (skillsTitleInput) skillsTitleInput.value = currentData.profile.about_skills_title || '';
+    if (skillsListInput && currentData.profile.about_skills_list) {
+        skillsListInput.value = currentData.profile.about_skills_list.join(', ');
+    }
 }
 
 // Profile Form submit handler
@@ -986,6 +1118,14 @@ if (profileForm) {
         currentData.profile.about_education_title = document.getElementById('profile-about-education-title').value.trim();
         currentData.profile.about_education_p1 = document.getElementById('profile-about-education-p1').value.trim();
         currentData.profile.about_education_p2 = document.getElementById('profile-about-education-p2').value.trim();
+
+        const skillsTitleEl = document.getElementById('profile-about-skills-title');
+        const skillsListEl = document.getElementById('profile-about-skills-list');
+        
+        if (skillsTitleEl) currentData.profile.about_skills_title = skillsTitleEl.value.trim();
+        if (skillsListEl) {
+            currentData.profile.about_skills_list = skillsListEl.value.split(',').map(s => s.trim()).filter(s => s);
+        }
 
         // Persist to storage
         saveDataToStorage();

@@ -48,21 +48,21 @@
                                 <i class="fas fa-envelope"></i>
                                 <div>
                                     <h4>Email</h4>
-                                    <p>student@university.edu</p>
+                                    <p id="contact-page-email">student@university.edu</p>
                                 </div>
                             </div>
                             <div class="info-item">
                                 <i class="fas fa-phone-alt"></i>
                                 <div>
                                     <h4>Phone</h4>
-                                    <p>+1 (234) 567-8900</p>
+                                    <p id="contact-page-phone">+1 (234) 567-8900</p>
                                 </div>
                             </div>
                             <div class="info-item">
                                 <i class="fas fa-map-marker-alt"></i>
                                 <div>
                                     <h4>Location</h4>
-                                    <p>Tech City, State, Country</p>
+                                    <p id="contact-page-location">Tech City, State, Country</p>
                                 </div>
                             </div>
                         </div>
@@ -71,16 +71,16 @@
                     <div class="contact-form">
                         <form id="contactForm">
                             <div class="form-group">
-                                <input type="text" placeholder="Your Name" required>
+                                <input type="text" id="msg-name" placeholder="Your Name" required>
                             </div>
                             <div class="form-group">
-                                <input type="email" placeholder="Your Email" required>
+                                <input type="email" id="msg-email" placeholder="Your Email" required>
                             </div>
                             <div class="form-group">
-                                <input type="text" placeholder="Subject" required>
+                                <input type="text" id="msg-subject" placeholder="Subject" required>
                             </div>
                             <div class="form-group">
-                                <textarea rows="5" placeholder="Your Message" required></textarea>
+                                <textarea id="msg-body" rows="5" placeholder="Your Message" required></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary btn-block">Send Message <i class="fas fa-paper-plane"></i></button>
                         </form>
@@ -93,8 +93,8 @@
     <!-- Footer Module Placeholder -->
     <div id="footer-placeholder"></div>
 
-    <script src="js/global.js"></script>
-    <script src="js/contact.js"></script>
+    <script src="js/global.js?v=4"></script>
+    <script src="js/contact.js?v=4"></script>
 </body>
 </html>
 
