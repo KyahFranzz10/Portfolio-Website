@@ -1,14 +1,31 @@
 // About page specific JS
 document.addEventListener('DOMContentLoaded', () => {
-    /* Image Carousel Logic */
-    const slides = document.querySelectorAll('.carousel-slide');
-    const dots = document.querySelectorAll('.carousel-nav .dot');
+    /* Dynamic Image Carousel Logic */
     const prevBtn = document.getElementById('carousel-prev');
     const nextBtn = document.getElementById('carousel-next');
     let currentIndex = 0;
     let timer;
 
-    if (slides.length > 0) {
+    const initCarousel = (images) => {
+        const track = document.getElementById('about-carousel');
+        const nav = document.getElementById('carousel-nav');
+        if (!track || !nav) return;
+
+        // Generate HTML
+        track.innerHTML = images.map((src, i) => `<img src="${src}" alt="About Image ${i+1}" class="carousel-slide ${i === 0 ? 'active' : ''}">`).join('');
+        nav.innerHTML = images.map((_, i) => `<span class="dot ${i === 0 ? 'active' : ''}" data-index="${i}"></span>`).join('');
+
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.carousel-nav .dot');
+
+        if (slides.length <= 1) {
+            // Hide controls if 0 or 1 image
+            if (prevBtn) prevBtn.style.display = 'none';
+            if (nextBtn) nextBtn.style.display = 'none';
+            nav.style.display = 'none';
+            return;
+        }
+
         const updateCarousel = (index) => {
             slides.forEach(s => s.classList.remove('active'));
             dots.forEach(d => d.classList.remove('active'));
@@ -31,8 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
             timer = setInterval(nextSlide, 4500);
         };
 
-        nextBtn.addEventListener('click', () => { nextSlide(); resetTimer(); });
-        prevBtn.addEventListener('click', () => { prevSlide(); resetTimer(); });
+        if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); resetTimer(); });
+        if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); resetTimer(); });
 
         dots.forEach(dot => {
             dot.addEventListener('click', (e) => {
@@ -43,11 +60,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         resetTimer(); // Start autoplay
-    }
+    };
 
     /* Fetch and render "My Journey" dynamically */
     window.getPortfolioData()
         .then(data => {
+            // Load Profile Images into Carousel
+            if (data.profile_images && data.profile_images.about_carousel) {
+                initCarousel(data.profile_images.about_carousel);
+            } else {
+                initCarousel([]); // Empty state
+            }
+
             // Populate dynamic profile text fields if available
             if (data.profile) {
                 const eduTitleEl = document.getElementById('about-edu-title');

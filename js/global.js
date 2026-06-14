@@ -389,6 +389,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer."
             };
         }
+        if (!data.profile_images) {
+            data.profile_images = {
+                home_hero: "assets/image/IMG_0641.JPG",
+                about_carousel: [
+                    "assets/image/IMG_0641.JPG",
+                    "assets/image/Grad_Pic.jpg"
+                ]
+            };
+        }
         return data;
     }
 

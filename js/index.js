@@ -25,6 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (aboutP1El && data.profile.about_p1) aboutP1El.innerText = data.profile.about_p1;
                 if (aboutP2El && data.profile.about_p2) aboutP2El.innerText = data.profile.about_p2;
             }
+            
+            // Populate profile images if available
+            if (data.profile_images && data.profile_images.home_hero) {
+                const heroImgEl = document.getElementById('hero-image');
+                if (heroImgEl) {
+                    heroImgEl.src = data.profile_images.home_hero;
+                }
+            }
 
             // Get only the first 3 projects for the home page preview
             const featuredProjects = data.projects.slice(0, 3);

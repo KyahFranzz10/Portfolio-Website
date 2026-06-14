@@ -190,6 +190,60 @@ class CosmicDevServerHandler(http.server.SimpleHTTPRequestHandler):
                 response = {'success': False, 'error': str(e)}
                 self.wfile.write(json.dumps(response).encode('utf-8'))
                 print(f"Error handling /api/save: {e}")
+                
+        elif self.path == '/api/upload':
+            if not self.is_authenticated():
+                self.send_response(401)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode('utf-8'))
+                return
+                
+            try:
+                import base64
+                content_length = int(self.headers.get('Content-Length', 0))
+                post_data = self.rfile.read(content_length)
+                data = json.loads(post_data.decode('utf-8'))
+                
+                filename = data.get('filename')
+                base64_data = data.get('base64_data')
+                
+                if not filename or not base64_data:
+                    raise ValueError("Missing filename or base64_data")
+                    
+                # Extract base64 payload (strip data:image/...;base64, prefix)
+                if ',' in base64_data:
+                    base64_data = base64_data.split(',')[1]
+                    
+                image_data = base64.b64decode(base64_data)
+                
+                # Ensure assets/image directory exists
+                os.makedirs('assets/image', exist_ok=True)
+                
+                # Clean up filename and make unique if needed
+                import time
+                safe_filename = f"{int(time.time())}_{filename.replace(' ', '_')}"
+                filepath = os.path.join('assets/image', safe_filename)
+                
+                with open(filepath, 'wb') as f:
+                    f.write(image_data)
+                    
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                
+                # Return the relative path to be saved in JSON
+                response = {'success': True, 'path': f'assets/image/{safe_filename}'}
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                print(f"Successfully uploaded image: {filepath}")
+                
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                response = {'success': False, 'error': str(e)}
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                print(f"Error handling /api/upload: {e}")
 
         elif self.path == '/api/message':
             try:

@@ -124,5 +124,12 @@
         "linkedin": "https://linkedin.com/in/yourusername",
         "twitter": "https://twitter.com/yourusername",
         "facebook": "https://facebook.com/yourusername"
+    },
+    "profile_images": {
+        "home_hero": "assets/image/IMG_0641.JPG",
+        "about_carousel": [
+            "assets/image/IMG_0641.JPG",
+            "assets/image/Grad_Pic.jpg"
+        ]
     }
 }

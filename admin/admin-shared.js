@@ -168,7 +168,8 @@ function injectAdminLayout() {
                         <li><a href="socials.html" class="sidebar-link" id="link-socials"><i class="fas fa-share-alt"></i> Social Profiles</a></li>
                         <li><a href="contacts.html" class="sidebar-link" id="link-contacts"><i class="fas fa-address-book"></i> Contact Info</a></li>
                         <li><a href="messages.html" class="sidebar-link" id="link-messages"><i class="fas fa-inbox"></i> Messages</a></li>
-                        <li><a href="profile.html" class="sidebar-link" id="link-profile"><i class="fas fa-user-edit"></i> Profile Descriptions</a></li>
+                        <li><a href="profile.html" class="sidebar-link" id="link-profile"><i class="fas fa-user-edit"></i> About Page Content</a></li>
+                        <li><a href="images.html" class="sidebar-link" id="link-images"><i class="fas fa-images"></i> Profile Images</a></li>
                     </ul>
                 </nav>
 
@@ -334,12 +335,21 @@ function ensureSchema(data) {
             about_education_title: "Education & Passion",
             about_education_p1: "I am a final-year Information Technology student with a strong foundation in web development, database management, and system analysis. My academic journey has equipped me with both theoretical knowledge and practical skills.",
             about_education_p2: "I thrive on turning complex problems into simple, intuitive, and modern web applications. Currently looking for opportunities to contribute to impactful projects while growing as a developer.",
-            about_skills_title: "Core Competencies",
+                    about_skills_title: "Core Competencies",
             about_skills_list: ["Web Development", "UI/UX Design", "Database Management", "Problem Solving", "Agile Methodologies"]
         };
     } else if (!data.profile.about_skills_list) {
         data.profile.about_skills_title = "Core Competencies";
         data.profile.about_skills_list = ["Web Development", "UI/UX Design", "Database Management", "Problem Solving", "Agile Methodologies"];
+    }
+    if (!data.profile_images) {
+        data.profile_images = {
+            home_hero: "assets/image/IMG_0641.JPG",
+            about_carousel: [
+                "assets/image/IMG_0641.JPG",
+                "assets/image/Grad_Pic.jpg"
+            ]
+        };
     }
     return data;
 }
@@ -478,6 +488,9 @@ async function saveDataToStorage() {
         localStorage.setItem('portfolio_db', JSON.stringify(currentData));
     } catch (e) {
         console.warn("Could not write updates to LocalStorage.", e);
+        if (e.name === 'QuotaExceededError') {
+            alert("⚠️ WARNING: The image you uploaded is too large for offline storage!\n\nYou MUST start the Python Server (server.py) to save files this large.");
+        }
     }
 
     if (supabaseClient) {
@@ -507,7 +520,12 @@ async function saveDataToStorage() {
             console.log("Successfully auto-synced changes to js/data.json via dev server.");
         } else {
             console.warn("Failed to auto-sync changes to server. Running in standalone static mode.");
+            alert("⚠️ Failed to save to server. Are you running python server.py?");
         }
+    } catch (e) {
+        console.warn("Server save failed. (Offline mode).", e);
+        // We only alert here if they also failed localStorage, otherwise they'll get spammed on offline mode
+    }
     } catch (err) {
         console.log("Dev server not detected or offline. Running in offline standalone static mode.");
     }
@@ -530,8 +548,10 @@ function initPageDashboard() {
         loadSocialsFields();
     } else if (page === 'contacts.html') {
         loadContactsFields();
-    } else if (page === 'messages.html') {
+    } else if (pageName === 'messages.html') {
         renderMessagesList();
+    } else if (pageName === 'images.html') {
+        initImagesManager();
     } else if (page === 'profile.html') {
         loadProfileFields();
     }
@@ -1096,9 +1116,175 @@ function loadProfileFields() {
     
     if (skillsTitleInput) skillsTitleInput.value = currentData.profile.about_skills_title || '';
     if (skillsListInput && currentData.profile.about_skills_list) {
-        skillsListInput.value = currentData.profile.about_skills_list.join(', ');
+        document.getElementById('profile-about-skills-list').value = currentData.profile.about_skills_list.join(', ');
     }
 }
+
+// ==========================================
+// Images Manager Logic
+// ==========================================
+let tempCarouselImages = [];
+
+function initImagesManager() {
+    if (!currentData || !currentData.profile_images) return;
+    
+    // Bind Hero Image Preview
+    const heroPreview = document.getElementById('hero-image-preview');
+    if (currentData.profile_images.home_hero) {
+        heroPreview.src = `../${currentData.profile_images.home_hero}`;
+        heroPreview.style.display = 'block';
+    }
+    
+    // File input change handler for Hero Image
+    const heroInput = document.getElementById('image-home-hero');
+    heroInput.addEventListener('change', async (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const base64 = await fileToBase64(file);
+            heroPreview.src = base64;
+            heroPreview.style.display = 'block';
+        }
+    });
+
+    // Copy carousel images to temp array for editing
+    tempCarouselImages = [...(currentData.profile_images.about_carousel || [])];
+    
+    renderCarouselImagesList();
+
+    const form = document.getElementById('images-form');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = form.querySelector('button[type="submit"]');
+            setLoading(btn, true);
+            
+            try {
+                // If a new hero image is selected, upload it
+                if (heroInput.files && heroInput.files[0]) {
+                    const file = heroInput.files[0];
+                    if (file.size > 2 * 1024 * 1024) { // Warn if > 2MB
+                        console.warn("Large image selected, it might fail without python server");
+                    }
+                    const base64 = await fileToBase64(file);
+                    
+                    const uploadedPath = await uploadImageToServer(file.name, base64);
+                    currentData.profile_images.home_hero = uploadedPath;
+                }
+
+                currentData.profile_images.about_carousel = [...tempCarouselImages];
+                await saveDataToStorage();
+                
+                const origText = btn.innerHTML;
+                btn.style.background = '#10b981';
+                btn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+                setTimeout(() => {
+                    btn.style.background = '';
+                    btn.innerHTML = origText;
+                }, 2000);
+            } catch (err) {
+                console.error(err);
+                alert('Error saving images.');
+            } finally {
+                setLoading(btn, false);
+            }
+        });
+    }
+}
+
+// Helper to convert file to base64
+function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+// Helper to upload image to server
+async function uploadImageToServer(filename, base64Data) {
+    try {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ filename: filename, base64_data: base64Data })
+        });
+
+        if (!res.ok) {
+            throw new Error(`Server returned ${res.status}`);
+        }
+        
+        const result = await res.json();
+        if (result.success) {
+            return result.path; // e.g. assets/image/123_file.jpg
+        }
+        throw new Error('Server upload response failed');
+    } catch(e) {
+        console.warn("Upload to server failed, falling back to raw Base64 data", e);
+        return base64Data; // Fallback to raw base64 string if running locally without python server
+    }
+}
+
+function renderCarouselImagesList() {
+    const list = document.getElementById('carousel-images-list');
+    if (!list) return;
+
+    if (tempCarouselImages.length === 0) {
+        list.innerHTML = '<div class="admin-empty">No carousel images. Add some above!</div>';
+        return;
+    }
+
+    list.innerHTML = tempCarouselImages.map((imgUrl, index) => `
+        <div class="admin-list-item" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); margin-bottom: 5px; border-radius: 4px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="${imgUrl.startsWith('data:') ? imgUrl : '../' + imgUrl}" alt="Carousel image" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; background: rgba(255,255,255,0.1);">
+                <div class="item-title" style="font-family: monospace; font-size: 0.85rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${imgUrl.startsWith('data:') ? 'Base64 Image Data' : imgUrl}</div>
+            </div>
+            <div class="item-actions">
+                <button type="button" class="btn-admin btn-delete" onclick="deleteCarouselImage(${index})" title="Delete Image">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+window.handleAddCarouselImage = async function() {
+    const input = document.getElementById('new-carousel-image');
+    const btn = document.getElementById('btn-add-carousel');
+    
+    if (input.files && input.files[0]) {
+        setLoading(btn, true);
+        try {
+            const file = input.files[0];
+            const base64 = await fileToBase64(file);
+            const uploadedPath = await uploadImageToServer(file.name, base64);
+            
+            tempCarouselImages.push(uploadedPath);
+            input.value = '';
+            renderCarouselImagesList();
+            
+            // Auto-save the new carousel image
+            currentData.profile_images.about_carousel = [...tempCarouselImages];
+            await saveDataToStorage();
+            
+        } catch(e) {
+            console.error(e);
+            alert("Failed to upload image. Make sure your Python Server is running.");
+        } finally {
+            setLoading(btn, false);
+        }
+    } else {
+        alert("Please select an image file first.");
+    }
+};
+
+window.deleteCarouselImage = function(index) {
+    if (confirm('Remove this image from the carousel?')) {
+        tempCarouselImages.splice(index, 1);
+        renderCarouselImagesList();
+    }
+};
 
 // Profile Form submit handler
 const profileForm = document.getElementById('profile-form');

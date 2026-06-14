@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Profile Images - Admin Console</title>
+    
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <section class="admin-section">
+                <h2><span><i class="fas fa-images"></i> Manage Profile Images</span></h2>
+                
+                <form id="images-form" style="max-width: 750px; margin: 0 auto;">
+                    <h3 style="color: var(--clr-accent); margin: 25px 0 15px; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;"><i class="fas fa-home"></i> Home Page Hero Image</h3>
+                    
+                    <div class="form-group">
+                        <label for="image-home-hero">Hero Image File</label>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <img id="hero-image-preview" src="" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; background: rgba(255,255,255,0.05); display: none;">
+                            <div style="flex-grow: 1;">
+                                <input type="file" id="image-home-hero" accept="image/*" class="admin-file-input">
+                                <small style="display: block; margin-top: 5px; color: var(--text-secondary);"><i class="fas fa-info-circle"></i> Select an image from your computer.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="color: var(--clr-accent); margin: 35px 0 15px; font-size: 1.15rem; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;"><i class="fas fa-layer-group"></i> About Page Carousel Images</h3>
+                    
+                    <div class="form-group">
+                        <label>Add New Carousel Image</label>
+                        <div style="display: flex; gap: 10px; align-items: flex-start;">
+                            <div style="flex-grow: 1;">
+                                <input type="file" id="new-carousel-image" accept="image/*" class="admin-file-input">
+                            </div>
+                            <button type="button" class="btn-admin btn-add" id="btn-add-carousel" onclick="handleAddCarouselImage()" style="height: 48px;">
+                                <i class="fas fa-plus"></i> Upload & Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="carousel-images-list" class="admin-list-container" style="margin-top: 20px;">
+                        <!-- Rendered by JS -->
+                    </div>
+
+                    <div style="margin-top: 45px;">
+                        <button type="submit" class="btn-admin btn-save" style="width: 100%; justify-content: center; font-size: 1.05rem; padding: 14px 28px;">
+                            <i class="fas fa-save"></i> Save Profile Images
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script src="admin-shared.js?v=5"></script>
+</body>
+</html>

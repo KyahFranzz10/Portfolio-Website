@@ -147,8 +147,8 @@
         // Offline / Static Fallback Authentication
         async function fallbackClientAuth(user, pass, showError) {
             const passHash = await sha256(pass);
-            // SHA-256 hash of 'password123'
-            const expectedHash = 'ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f';
+            // SHA-256 hash of 'admin123'
+            const expectedHash = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
             
             if (user === 'admin' && passHash === expectedHash) {
                 sessionStorage.setItem('admin_logged_in', 'true');
