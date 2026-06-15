@@ -1,0 +1,25 @@
+{
+  "dependencies": {
+    "jsdom": "^29.1.1"
+  },
+  "name": "portfolio-website",
+  "version": "1.0.0",
+  "description": "",
+  "main": "test_dom.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KyahFranzz10/Portfolio-Website.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/KyahFranzz10/Portfolio-Website/issues"
+  },
+  "homepage": "https://github.com/KyahFranzz10/Portfolio-Website#readme"
+}

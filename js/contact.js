@@ -97,31 +97,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Email forwarding failed:", e);
             }
 
+            // Save message to offline storage (no backend server anymore)
+            let msgs = [];
             try {
-                // Try backend API first
-                const res = await fetch('/api/message', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (res.ok) {
-                    showToast('Message sent successfully!');
-                } else {
-                    throw new Error("Server failed to save message");
-                }
-            } catch (err) {
-                // Fallback to local storage if static mode
-                console.warn("Saving to offline messages (dev server not running).", err);
-                let msgs = [];
-                try {
-                    msgs = JSON.parse(localStorage.getItem('portfolio_messages')) || [];
-                } catch(e){}
-                payload.timestamp = Date.now();
-                msgs.unshift(payload);
-                localStorage.setItem('portfolio_messages', JSON.stringify(msgs));
-                showToast('Message saved successfully!', 'success');
-            }
+                msgs = JSON.parse(localStorage.getItem('portfolio_messages')) || [];
+            } catch(e){}
+            payload.timestamp = Date.now();
+            msgs.unshift(payload);
+            localStorage.setItem('portfolio_messages', JSON.stringify(msgs));
+            showToast('Message saved successfully!', 'success');
 
             btn.innerHTML = originalText;
             btn.disabled = false;

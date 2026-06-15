@@ -62,11 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
-            try {
-                await fetch('/api/logout', { method: 'POST' });
-            } catch (err) {
-                console.warn("Server is offline or unreachable during logout:", err);
-            }
             sessionStorage.removeItem('admin_logged_in');
             window.location.href = 'login.html';
         });
@@ -324,6 +319,7 @@ function ensureSchema(data) {
     if (!data.messages) data.messages = [];
     if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
     if (!data.contact) data.contact = { email: "student@university.edu", phone: "+1 (234) 567-8900", location: "Tech City, State, Country" };
+    if (typeof data.maintenance_mode === 'undefined') data.maintenance_mode = false;
     if (!data.profile) {
         data.profile = {
             name: "Jhon Francis Garapan",
@@ -507,28 +503,6 @@ async function saveDataToStorage() {
         }
     }
 
-    // Automatically send update to the local dev server if running
-    try {
-        const response = await fetch('/api/save', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(currentData)
-        });
-        if (response.ok) {
-            console.log("Successfully auto-synced changes to js/data.json via dev server.");
-        } else {
-            console.warn("Failed to auto-sync changes to server. Running in standalone static mode.");
-            alert("⚠️ Failed to save to server. Are you running python server.py?");
-        }
-    } catch (e) {
-        console.warn("Server save failed. (Offline mode).", e);
-        // We only alert here if they also failed localStorage, otherwise they'll get spammed on offline mode
-    }
-    } catch (err) {
-        console.log("Dev server not detected or offline. Running in offline standalone static mode.");
-    }
 }
 
 // Router to initialize components based on the active document
@@ -548,9 +522,9 @@ function initPageDashboard() {
         loadSocialsFields();
     } else if (page === 'contacts.html') {
         loadContactsFields();
-    } else if (pageName === 'messages.html') {
+    } else if (page === 'messages.html') {
         renderMessagesList();
-    } else if (pageName === 'images.html') {
+    } else if (page === 'images.html') {
         initImagesManager();
     } else if (page === 'profile.html') {
         loadProfileFields();
@@ -565,19 +539,22 @@ function renderDashboardStats() {
     const gCount = document.getElementById('stat-gallery-count');
     const jCount = document.getElementById('stat-journey-count');
     const sCount = document.getElementById('stat-socials-count');
-
+    
     if (pCount) pCount.innerText = currentData.projects.length;
     if (gCount) gCount.innerText = currentData.gallery.length;
     if (jCount) jCount.innerText = currentData.journey.length;
-    
-    if (sCount) {
-        let activeCount = 0;
-        if (currentData.socials.github) activeCount++;
-        if (currentData.socials.linkedin) activeCount++;
-        if (currentData.socials.twitter) activeCount++;
-        if (currentData.socials.facebook) activeCount++;
-        sCount.innerText = activeCount;
+    if (sCount) sCount.innerText = Object.values(currentData.socials).filter(val => val.trim() !== "").length;
+
+    // Initialize maintenance toggle
+    const toggle = document.getElementById('maintenance-toggle');
+    if (toggle) {
+        toggle.checked = currentData.maintenance_mode || false;
     }
+}
+
+async function toggleMaintenanceMode(state) {
+    currentData.maintenance_mode = state;
+    await saveDataToStorage();
 }
 
 /* ==========================================
@@ -1201,28 +1178,9 @@ function fileToBase64(file) {
     });
 }
 
-// Helper to upload image to server
+// Helper to upload image to server (removed Python server, just returning Base64)
 async function uploadImageToServer(filename, base64Data) {
-    try {
-        const res = await fetch('/api/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ filename: filename, base64_data: base64Data })
-        });
-
-        if (!res.ok) {
-            throw new Error(`Server returned ${res.status}`);
-        }
-        
-        const result = await res.json();
-        if (result.success) {
-            return result.path; // e.g. assets/image/123_file.jpg
-        }
-        throw new Error('Server upload response failed');
-    } catch(e) {
-        console.warn("Upload to server failed, falling back to raw Base64 data", e);
-        return base64Data; // Fallback to raw base64 string if running locally without python server
-    }
+    return base64Data;
 }
 
 function renderCarouselImagesList() {

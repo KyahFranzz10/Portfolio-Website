@@ -46,7 +46,12 @@
             <!-- Glassmorphic Modal Editor Form -->
             <div id="journey-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6, 11, 25, 0.7); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
                 <div class="modal-content-panel">
-                    <h3 id="journey-form-title">Add New Timeline Event</h3>
+                    <div class="modal-header">
+                        <h3 id="journey-form-title">Add New Timeline Event</h3>
+                        <button type="button" class="btn-close-modal" onclick="hideJourneyForm()" aria-label="Close modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
                     <form id="journey-admin-form">
                         <input type="hidden" id="journey-id">
                         

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Under Maintenance</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/global.css">
+
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .maintenance-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(10, 17, 40, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 60px 40px;
+            border-radius: 30px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            max-width: 600px;
+            width: 90%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .icon-container {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--clr-primary-light), var(--clr-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--clr-text);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: var(--clr-text-muted);
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .pulse-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: var(--clr-accent);
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 10px var(--clr-accent);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(14, 165, 233, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(14, 165, 233, 0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <div class="maintenance-container">
+        <div class="icon-container">
+            <i class="fas fa-tools"></i>
+        </div>
+        <h1>Under Construction</h1>
+        <p>I'm currently performing some updates and maintenance on the portfolio. Please check back soon!</p>
+        <div>
+            <span class="pulse-dot"></span>
+            <span style="color: var(--clr-text-muted); font-size: 0.9rem;">Checking system status...</span>
+        </div>
+    </div>
+
+    <script src="js/global.js?v=2"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Poll for maintenance status every 10 seconds
+            setInterval(async () => {
+                if (window.getPortfolioData) {
+                    try {
+                        const data = await window.getPortfolioData();
+                        if (data && data.maintenance_mode === false) {
+                            // Maintenance mode turned off, redirect back to home
+                            window.location.href = 'index.html';
+                        }
+                    } catch (e) {
+                        console.warn("Polling failed", e);
+                    }
+                }
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

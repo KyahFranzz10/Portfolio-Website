@@ -92,48 +92,9 @@
                 setTimeout(() => card.classList.remove('shake'), 500);
             };
 
-            // Detect if the Python server auth API is actually active
-            let serverAuthActive = false;
-            try {
-                const checkRes = await fetch('/api/check-auth');
-                if (checkRes.ok) {
-                    serverAuthActive = true;
-                }
-            } catch (err) {
-                console.log("Server auth check failed, using client-side fallback.");
-            }
-
-            if (serverAuthActive) {
-                try {
-                    // Try server-side authentication
-                    const response = await fetch('/api/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ username: user, password: pass })
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        if (data.success) {
-                            sessionStorage.setItem('admin_logged_in', 'true');
-                            window.location.href = 'index.html';
-                        } else {
-                            showError();
-                        }
-                    } else {
-                        showError();
-                    }
-                } catch (err) {
-                    console.error("Server authentication failed:", err);
-                    showError();
-                }
-            } else {
-                // Fall back to client-side check if server is offline or serving static files
-                console.warn("Using client-side fallback authentication.");
-                await fallbackClientAuth(user, pass, showError);
-            }
+            // Fall back to client-side check if server is offline or serving static files
+            console.warn("Using client-side fallback authentication.");
+            await clientAuth(user, pass, showError);
         });
 
         // SHA-256 hashing utility using native browser Crypto API
@@ -144,8 +105,8 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // Offline / Static Fallback Authentication
-        async function fallbackClientAuth(user, pass, showError) {
+        // Offline / Static Authentication
+        async function clientAuth(user, pass, showError) {
             const passHash = await sha256(pass);
             // SHA-256 hash of 'admin123'
             const expectedHash = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';

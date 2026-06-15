@@ -376,6 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!data.journey) data.journey = [];
         if (!data.messages) data.messages = [];
         if (!data.socials) data.socials = { github: "", linkedin: "", twitter: "", facebook: "" };
+        if (typeof data.maintenance_mode === 'undefined') data.maintenance_mode = false;
         if (!data.profile) {
             data.profile = {
                 name: "Jhon Francis Garapan",
@@ -482,7 +483,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.getPortfolioData = async () => {
         const raw = await rawGetPortfolioData();
-        return ensureSchema(raw);
+        const data = ensureSchema(raw);
+        
+        // Maintenance Mode Redirection
+        if (data.maintenance_mode === true) {
+            const currentPath = window.location.pathname.toLowerCase();
+            const isMaintenancePage = currentPath.includes('maintenance.html');
+            const isAdminPage = currentPath.includes('/admin/');
+            
+            if (!isMaintenancePage && !isAdminPage) {
+                // Determine relative path based on current location
+                // If deep inside subfolders, we'd need more logic, but site is flat + admin/
+                window.location.href = 'maintenance.html';
+            }
+        }
+
+        return data;
     };
 
     // Dynamic Socials Binder
