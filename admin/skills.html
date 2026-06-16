@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Skills - Admin Console</title>
+    
+    <!-- Security Auth Guard (loaded first before any render) -->
+    <script src="auth.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../css/global.css">
+    <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body class="admin-body">
+    <!-- Cosmic Background Elements -->
+    <div class="abstract-bg">
+        <div class="gradient-sphere shape-1"></div>
+        <div class="gradient-sphere shape-2"></div>
+        <div class="gradient-sphere shape-3"></div>
+        <div class="noise-overlay"></div>
+    </div>
+
+    <!-- Unified Layout Placeholders -->
+    <div id="admin-header-placeholder"></div>
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main">
+        <div class="admin-container">
+            <!-- Skills Management Grid -->
+            <section class="admin-section">
+                <h2>
+                    <span><i class="fas fa-code"></i> Manage Skills & Tools</span>
+                    <button class="btn-admin btn-add" onclick="addNewSkillCategory()">
+                        <i class="fas fa-plus"></i> Add Category
+                    </button>
+                </h2>
+                
+                <div id="skills-list" class="item-list">
+                    <!-- Dynamically loaded skill categories go here -->
+                </div>
+            </section>
+
+            <!-- Glassmorphic Modal Editor Form -->
+            <div id="item-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(6, 11, 25, 0.7); z-index:1000; align-items:center; justify-content:center;">
+                <div class="modal-content-panel" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h3 id="modal-title">Edit Skill Category</h3>
+                        <button type="button" class="btn-close-modal" onclick="closeSkillsModal()" aria-label="Close modal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="skill-form">
+                        <input type="hidden" id="skill-id">
+                        
+                        <div class="form-group">
+                            <label for="skill-category">Category Title</label>
+                            <input type="text" id="skill-category" required placeholder="e.g. Languages">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="skill-icon">Category Icon (FontAwesome class)</label>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <div id="category-icon-preview" style="width: 46px; height: 46px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--clr-primary-light); flex-shrink: 0;">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <input type="text" id="skill-icon" required placeholder="e.g. fas fa-code" style="flex: 1;" readonly onclick="openIconPicker('skill-icon', 'category-icon-preview')">
+                                <button type="button" class="btn-admin" onclick="openIconPicker('skill-icon', 'category-icon-preview')" style="padding: 10px 15px;"><i class="fas fa-search"></i></button>
+                            </div>
+                        </div>
+
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
+
+                        <div class="form-group">
+                            <label>Skill Items</label>
+                            <div id="temp-skill-items-container" style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
+                                <!-- Items rendered here via JS -->
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px; align-items: center; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px;">
+                                <input type="text" id="new-skill-name" placeholder="Skill Name (e.g. React)" style="flex: 1;">
+                                <div id="item-icon-preview" style="width: 46px; height: 46px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--clr-primary-light); flex-shrink: 0;">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <input type="text" id="new-skill-icon" placeholder="Click to choose icon" style="flex: 1;" readonly onclick="openIconPicker('new-skill-icon', 'item-icon-preview')">
+                                <button type="button" class="btn-admin btn-add" onclick="addTempSkillItem()" style="white-space: nowrap;"><i class="fas fa-plus"></i> Add</button>
+                            </div>
+                        </div>
+
+                        <div class="modal-actions" style="margin-top: 30px;">
+                            <button type="submit" class="btn-admin btn-save">
+                                <i class="fas fa-save"></i> Save Category
+                            </button>
+                            <button type="button" class="btn-admin btn-cancel" onclick="closeSkillsModal()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+
+                        <!-- Datalist removed, using icon picker modal instead -->
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Icon Picker Modal -->
+    <div id="icon-picker-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0, 0, 0, 0.85); z-index:2000; align-items:center; justify-content:center; backdrop-filter: blur(5px);">
+        <div class="modal-content-panel" style="max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; padding: 25px;">
+            <div class="modal-header" style="margin-bottom: 20px;">
+                <h3 style="margin:0; font-size: 1.5rem; color: var(--admin-text-title);">Select Icon</h3>
+                <button type="button" class="btn-close-modal" onclick="closeIconPicker()" aria-label="Close modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="margin-bottom: 20px;">
+                <input type="text" id="icon-search" placeholder="Search icons (e.g. react, code)..." onkeyup="filterIcons()" style="width:100%; padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: white; outline: none;">
+            </div>
+            <div id="icon-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(50px, 1fr)); gap: 12px; max-height: 300px; overflow-y: auto; padding-right: 5px;">
+                <!-- Icon buttons go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="admin-shared.js"></script>
+</body>
+</html>

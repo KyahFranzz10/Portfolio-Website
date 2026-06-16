@@ -62,6 +62,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async (e) => {
             e.preventDefault();
+            sessionStorage.removeItem('_admin_token');
             sessionStorage.removeItem('admin_logged_in');
             window.location.href = 'login.html';
         });
@@ -160,6 +161,7 @@ function injectAdminLayout() {
                         <li><a href="portfolio.html" class="sidebar-link" id="link-portfolio"><i class="fas fa-briefcase"></i> Portfolio Projects</a></li>
                         <li><a href="gallery.html" class="sidebar-link" id="link-gallery"><i class="fas fa-images"></i> Gallery Media</a></li>
                         <li><a href="journey.html" class="sidebar-link" id="link-journey"><i class="fas fa-route"></i> My Journey</a></li>
+                        <li><a href="skills.html" class="sidebar-link" id="link-skills"><i class="fas fa-code"></i> Skills & Tools</a></li>
                         <li><a href="socials.html" class="sidebar-link" id="link-socials"><i class="fas fa-share-alt"></i> Social Profiles</a></li>
                         <li><a href="contacts.html" class="sidebar-link" id="link-contacts"><i class="fas fa-address-book"></i> Contact Info</a></li>
                         <li><a href="messages.html" class="sidebar-link" id="link-messages"><i class="fas fa-inbox"></i> Messages</a></li>
@@ -347,6 +349,62 @@ function ensureSchema(data) {
             ]
         };
     }
+    if (!data.skills) {
+        data.skills = [
+            {
+                id: "cat_1",
+                category: "Languages",
+                icon: "fas fa-code",
+                items: [
+                    { name: "HTML", icon: "fab fa-html5" },
+                    { name: "CSS", icon: "fab fa-css3-alt" },
+                    { name: "JavaScript", icon: "fab fa-js" },
+                    { name: "Python", icon: "fab fa-python" },
+                    { name: "PHP", icon: "fab fa-php" },
+                    { name: "Dart", icon: "fas fa-bullseye" },
+                    { name: "C", icon: "fas fa-terminal" },
+                    { name: "C++", icon: "fas fa-code" },
+                    { name: "C#", icon: "fas fa-hashtag" }
+                ]
+            },
+            {
+                id: "cat_2",
+                category: "Frameworks & Libs",
+                icon: "fas fa-layer-group",
+                items: [
+                    { name: "React", icon: "fab fa-react" },
+                    { name: "Node.js", icon: "fab fa-node-js" },
+                    { name: "Tailwind CSS", icon: "fas fa-leaf" },
+                    { name: "Laravel", icon: "fab fa-laravel" },
+                    { name: "Flutter", icon: "fas fa-mobile-alt" }
+                ]
+            },
+            {
+                id: "cat_3",
+                category: "Tools & Databases",
+                icon: "fas fa-tools",
+                items: [
+                    { name: "Git & GitHub", icon: "fab fa-git-alt" },
+                    { name: "MySQL", icon: "fas fa-database" },
+                    { name: "Command Line", icon: "fas fa-terminal" },
+                    { name: "Firebase", icon: "fas fa-fire" },
+                    { name: "Supabase", icon: "fas fa-bolt" },
+                    { name: "Hostinger", icon: "fas fa-server" },
+                    { name: "n8n (Automation)", icon: "fas fa-project-diagram" }
+                ]
+            },
+            {
+                id: "cat_4",
+                category: "Productivity & Media",
+                icon: "fas fa-photo-film",
+                items: [
+                    { name: "Microsoft Office", icon: "fas fa-file-alt" },
+                    { name: "Adobe Suite", icon: "fab fa-adobe" },
+                    { name: "OBS Studio", icon: "fas fa-video" }
+                ]
+            }
+        ];
+    }
     return data;
 }
 
@@ -479,6 +537,13 @@ async function loadData() {
 
 // Save state data to localStorage and server API
 async function saveDataToStorage() {
+    // SECURITY CHECK: Verify token before saving changes
+    if (window._verifyAuth && !window._verifyAuth()) {
+        alert("Session expired or invalid. Please log in again to save changes.");
+        window.location.href = 'login.html';
+        return;
+    }
+
     currentData.last_updated = Date.now();
     try {
         localStorage.setItem('portfolio_db', JSON.stringify(currentData));
@@ -528,6 +593,8 @@ function initPageDashboard() {
         initImagesManager();
     } else if (page === 'profile.html') {
         loadProfileFields();
+    } else if (page === 'skills.html') {
+        renderSkillsList();
     }
 }
 
@@ -565,7 +632,7 @@ function renderPortfolioList() {
     if (!pList) return;
 
     pList.innerHTML = '';
-    currentData.projects.forEach(p => {
+    currentData.projects.forEach((p, index) => {
         const statusVal = p.status || 'deployed';
         const statusLabel = statusVal === 'in-progress' ? 'In Progress' : (statusVal === 'not-deployed' ? 'Local Only' : 'Deployed');
 
@@ -580,16 +647,78 @@ function renderPortfolioList() {
                         <span class="status-badge status-${statusVal}">${statusLabel}</span>
                     </div>
                     <h4>${p.title}</h4>
-                    <p>${p.description}</p>
+                    <p>${p.description.length > 100 ? p.description.substring(0, 100) + '...' : p.description}</p>
                 </div>
                 <div class="item-actions">
                     <button class="btn-admin btn-edit" onclick='editItem("portfolio", "${p.id}")'><i class="fas fa-edit"></i> Edit</button>
                     <button class="btn-admin btn-delete" onclick='deleteItem("portfolio", "${p.id}")'><i class="fas fa-trash-alt"></i> Delete</button>
+                    <button class="btn-admin" style="background: rgba(59, 130, 246, 0.15); border-color: var(--clr-primary); color: var(--clr-primary-light);" onclick="window.openProjectModal(${index})"><i class="fas fa-eye"></i> View</button>
                 </div>
             </div>
         `;
     });
 }
+
+// Modal Logic for Admin Portfolio Preview
+window.openProjectModal = function(index) {
+    const project = currentData.projects[index];
+    if (!project) return;
+
+    const modal = document.getElementById('project-modal');
+    const modalBody = document.getElementById('modal-body-content');
+    
+    if (!modal || !modalBody) return;
+
+    let mediaHTML = '';
+    if (project.mediaType === 'video') {
+        mediaHTML = `<video src="${project.mediaUrl}" controls autoplay></video>`;
+    } else {
+        mediaHTML = `<img src="${project.mediaUrl}" alt="${project.title}">`;
+    }
+
+    modalBody.innerHTML = `
+        <div class="modal-body">
+            <div class="modal-media">
+                ${mediaHTML}
+            </div>
+            <div class="modal-info">
+                <h2>${project.title}</h2>
+                <div class="project-tags-row" style="margin-bottom: 20px;">
+                    <div class="project-tags">
+                        ${project.tags.map(tag => `<span>${tag}</span>`).join('')}
+                    </div>
+                </div>
+                <p>${project.description}</p>
+                ${project.link ? `<a href="${project.link}" target="_blank" class="modal-action-btn"><i class="fas fa-external-link-alt"></i> Visit Project</a>` : ''}
+            </div>
+        </div>
+    `;
+
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeProjectModal = function() {
+    const modal = document.getElementById('project-modal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        const video = modal.querySelector('video');
+        if (video) video.pause();
+    }
+};
+
+// Close on overlay click
+document.addEventListener('DOMContentLoaded', () => {
+    const modalOverlay = document.getElementById('project-modal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) {
+                window.closeProjectModal();
+            }
+        });
+    }
+});
 
 /* ==========================================
    3. Gallery Management View (gallery.html)
@@ -1288,3 +1417,195 @@ if (profileForm) {
 }
 
 
+/* ==========================================
+   Skills Management View (skills.html)
+   ========================================== */
+function renderSkillsList() {
+    const list = document.getElementById('skills-list');
+    if (!list) return;
+
+    list.innerHTML = '';
+    currentData.skills.forEach((cat, index) => {
+        list.innerHTML += `
+            <div class="item-card" style="padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+                    <i class="${cat.icon}" style="font-size: 1.5rem; color: var(--clr-primary-light);"></i>
+                    <h4 style="margin: 0; font-size: 1.2rem;">${cat.category}</h4>
+                </div>
+                <div class="skill-tags" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${cat.items.map(item => `<span class="skill-tag" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-size: 0.85rem;"><i class="${item.icon}" style="margin-right: 5px;"></i> ${item.name}</span>`).join('')}
+                </div>
+                <div class="item-actions">
+                    <button class="btn-admin btn-edit" onclick="editSkillCategory('${cat.id}')"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="btn-admin btn-delete" onclick="deleteSkillCategory('${cat.id}')"><i class="fas fa-trash-alt"></i> Delete</button>
+                </div>
+            </div>
+        `;
+    });
+}
+
+function openSkillsModal() {
+    const modal = document.getElementById('item-modal');
+    if (modal) modal.style.display = 'flex';
+}
+
+function closeSkillsModal() {
+    const modal = document.getElementById('item-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+const availableIcons = ["fab fa-500px","fab fa-accessible-icon","fab fa-accusoft","fab fa-acquisitions-incorporated","fas fa-ad","fas fa-address-book","fas fa-address-card","fas fa-adjust","fab fa-adn","fab fa-adversal","fab fa-affiliatetheme","fas fa-air-freshener","fab fa-airbnb","fab fa-algolia","fas fa-align-center","fas fa-align-justify","fas fa-align-left","fas fa-align-right","fab fa-alipay","fas fa-allergies","fab fa-amazon","fab fa-amazon-pay","fas fa-ambulance","fas fa-american-sign-language-interpreting","fab fa-amilia","fas fa-anchor","fab fa-android","fab fa-angellist","fas fa-angle-double-down","fas fa-angle-double-left","fas fa-angle-double-right","fas fa-angle-double-up","fas fa-angle-down","fas fa-angle-left","fas fa-angle-right","fas fa-angle-up","fas fa-angry","fab fa-angrycreative","fab fa-angular","fas fa-ankh","fab fa-app-store","fab fa-app-store-ios","fab fa-apper","fab fa-apple","fas fa-apple-alt","fab fa-apple-pay","fas fa-archive","fas fa-archway","fas fa-arrow-alt-circle-down","fas fa-arrow-alt-circle-left","fas fa-arrow-alt-circle-right","fas fa-arrow-alt-circle-up","fas fa-arrow-circle-down","fas fa-arrow-circle-left","fas fa-arrow-circle-right","fas fa-arrow-circle-up","fas fa-arrow-down","fas fa-arrow-left","fas fa-arrow-right","fas fa-arrow-up","fas fa-arrows-alt","fas fa-arrows-alt-h","fas fa-arrows-alt-v","fab fa-artstation","fas fa-assistive-listening-systems","fas fa-asterisk","fab fa-asymmetrik","fas fa-at","fas fa-atlas","fab fa-atlassian","fas fa-atom","fab fa-audible","fas fa-audio-description","fab fa-autoprefixer","fab fa-avianex","fab fa-aviato","fas fa-award","fab fa-aws","fas fa-baby","fas fa-baby-carriage","fas fa-backspace","fas fa-backward","fas fa-bacon","fas fa-bacteria","fas fa-bacterium","fas fa-bahai","fas fa-balance-scale","fas fa-balance-scale-left","fas fa-balance-scale-right","fas fa-ban","fas fa-band-aid","fab fa-bandcamp","fas fa-barcode","fas fa-bars","fas fa-baseball-ball","fas fa-basketball-ball","fas fa-bath","fas fa-battery-empty","fas fa-battery-full","fas fa-battery-half","fas fa-battery-quarter","fas fa-battery-three-quarters","fab fa-battle-net","fas fa-bed","fas fa-beer","fab fa-behance","fab fa-behance-square","fas fa-bell","fas fa-bell-slash","fas fa-bezier-curve","fas fa-bible","fas fa-bicycle","fas fa-biking","fab fa-bimobject","fas fa-binoculars","fas fa-biohazard","fas fa-birthday-cake","fab fa-bitbucket","fab fa-bitcoin","fab fa-bity","fab fa-black-tie","fab fa-blackberry","fas fa-blender","fas fa-blender-phone","fas fa-blind","fas fa-blog","fab fa-blogger","fab fa-blogger-b","fab fa-bluetooth","fab fa-bluetooth-b","fas fa-bold","fas fa-bolt","fas fa-bomb","fas fa-bone","fas fa-bong","fas fa-book","fas fa-book-dead","fas fa-book-medical","fas fa-book-open","fas fa-book-reader","fas fa-bookmark","fab fa-bootstrap","fas fa-border-all","fas fa-border-none","fas fa-border-style","fas fa-bowling-ball","fas fa-box","fas fa-box-open","fas fa-box-tissue","fas fa-boxes","fas fa-braille","fas fa-brain","fas fa-bread-slice","fas fa-briefcase","fas fa-briefcase-medical","fas fa-broadcast-tower","fas fa-broom","fas fa-brush","fab fa-btc","fab fa-buffer","fas fa-bug","fas fa-building","fas fa-bullhorn","fas fa-bullseye","fas fa-burn","fab fa-buromobelexperte","fas fa-bus","fas fa-bus-alt","fas fa-business-time","fab fa-buy-n-large","fab fa-buysellads","fas fa-calculator","fas fa-calendar","fas fa-calendar-alt","fas fa-calendar-check","fas fa-calendar-day","fas fa-calendar-minus","fas fa-calendar-plus","fas fa-calendar-times","fas fa-calendar-week","fas fa-camera","fas fa-camera-retro","fas fa-campground","fab fa-canadian-maple-leaf","fas fa-candy-cane","fas fa-cannabis","fas fa-capsules","fas fa-car","fas fa-car-alt","fas fa-car-battery","fas fa-car-crash","fas fa-car-side","fas fa-caravan","fas fa-caret-down","fas fa-caret-left","fas fa-caret-right","fas fa-caret-square-down","fas fa-caret-square-left","fas fa-caret-square-right","fas fa-caret-square-up","fas fa-caret-up","fas fa-carrot","fas fa-cart-arrow-down","fas fa-cart-plus","fas fa-cash-register","fas fa-cat","fab fa-cc-amazon-pay","fab fa-cc-amex","fab fa-cc-apple-pay","fab fa-cc-diners-club","fab fa-cc-discover","fab fa-cc-jcb","fab fa-cc-mastercard","fab fa-cc-paypal","fab fa-cc-stripe","fab fa-cc-visa","fab fa-centercode","fab fa-centos","fas fa-certificate","fas fa-chair","fas fa-chalkboard","fas fa-chalkboard-teacher","fas fa-charging-station","fas fa-chart-area","fas fa-chart-bar","fas fa-chart-line","fas fa-chart-pie","fas fa-check","fas fa-check-circle","fas fa-check-double","fas fa-check-square","fas fa-cheese","fas fa-chess","fas fa-chess-bishop","fas fa-chess-board","fas fa-chess-king","fas fa-chess-knight","fas fa-chess-pawn","fas fa-chess-queen","fas fa-chess-rook","fas fa-chevron-circle-down","fas fa-chevron-circle-left","fas fa-chevron-circle-right","fas fa-chevron-circle-up","fas fa-chevron-down","fas fa-chevron-left","fas fa-chevron-right","fas fa-chevron-up","fas fa-child","fab fa-chrome","fab fa-chromecast","fas fa-church","fas fa-circle","fas fa-circle-notch","fas fa-city","fas fa-clinic-medical","fas fa-clipboard","fas fa-clipboard-check","fas fa-clipboard-list","fas fa-clock","fas fa-clone","fas fa-closed-captioning","fas fa-cloud","fas fa-cloud-download-alt","fas fa-cloud-meatball","fas fa-cloud-moon","fas fa-cloud-moon-rain","fas fa-cloud-rain","fas fa-cloud-showers-heavy","fas fa-cloud-sun","fas fa-cloud-sun-rain","fas fa-cloud-upload-alt","fab fa-cloudflare","fab fa-cloudscale","fab fa-cloudsmith","fab fa-cloudversify","fas fa-cocktail","fas fa-code","fas fa-code-branch","fab fa-codepen","fab fa-codiepie","fas fa-coffee","fas fa-cog","fas fa-cogs","fas fa-coins","fas fa-columns","fas fa-comment","fas fa-comment-alt","fas fa-comment-dollar","fas fa-comment-dots","fas fa-comment-medical","fas fa-comment-slash","fas fa-comments","fas fa-comments-dollar","fas fa-compact-disc","fas fa-compass","fas fa-compress","fas fa-compress-alt","fas fa-compress-arrows-alt","fas fa-concierge-bell","fab fa-confluence","fab fa-connectdevelop","fab fa-contao","fas fa-cookie","fas fa-cookie-bite","fas fa-copy","fas fa-copyright","fab fa-cotton-bureau","fas fa-couch","fab fa-cpanel","fab fa-creative-commons","fab fa-creative-commons-by","fab fa-creative-commons-nc","fab fa-creative-commons-nc-eu","fab fa-creative-commons-nc-jp","fab fa-creative-commons-nd","fab fa-creative-commons-pd","fab fa-creative-commons-pd-alt","fab fa-creative-commons-remix","fab fa-creative-commons-sa","fab fa-creative-commons-sampling","fab fa-creative-commons-sampling-plus","fab fa-creative-commons-share","fab fa-creative-commons-zero","fas fa-credit-card","fab fa-critical-role","fas fa-crop","fas fa-crop-alt","fas fa-cross","fas fa-crosshairs","fas fa-crow","fas fa-crown","fas fa-crutch","fab fa-css3","fab fa-css3-alt","fas fa-cube","fas fa-cubes","fas fa-cut","fab fa-cuttlefish","fab fa-d-and-d","fab fa-d-and-d-beyond","fab fa-dailymotion","fab fa-dashcube","fas fa-database","fas fa-deaf","fab fa-deezer","fab fa-delicious","fas fa-democrat","fab fa-deploydog","fab fa-deskpro","fas fa-desktop","fab fa-dev","fab fa-deviantart","fas fa-dharmachakra","fab fa-dhl","fas fa-diagnoses","fab fa-diaspora","fas fa-dice","fas fa-dice-d20","fas fa-dice-d6","fas fa-dice-five","fas fa-dice-four","fas fa-dice-one","fas fa-dice-six","fas fa-dice-three","fas fa-dice-two","fab fa-digg","fab fa-digital-ocean","fas fa-digital-tachograph","fas fa-directions","fab fa-discord","fab fa-discourse","fas fa-disease","fas fa-divide","fas fa-dizzy","fas fa-dna","fab fa-dochub","fab fa-docker","fas fa-dog","fas fa-dollar-sign","fas fa-dolly","fas fa-dolly-flatbed","fas fa-donate","fas fa-door-closed","fas fa-door-open","fas fa-dot-circle","fas fa-dove","fas fa-download","fab fa-draft2digital","fas fa-drafting-compass","fas fa-dragon","fas fa-draw-polygon","fab fa-dribbble","fab fa-dribbble-square","fab fa-dropbox","fas fa-drum","fas fa-drum-steelpan","fas fa-drumstick-bite","fab fa-drupal","fas fa-dumbbell","fas fa-dumpster","fas fa-dumpster-fire","fas fa-dungeon","fab fa-dyalog","fab fa-earlybirds","fab fa-ebay","fab fa-edge","fab fa-edge-legacy","fas fa-edit","fas fa-egg","fas fa-eject","fab fa-elementor","fas fa-ellipsis-h","fas fa-ellipsis-v","fab fa-ello","fab fa-ember","fab fa-empire","fas fa-envelope","fas fa-envelope-open","fas fa-envelope-open-text","fas fa-envelope-square","fab fa-envira","fas fa-equals","fas fa-eraser","fab fa-erlang","fab fa-ethereum","fas fa-ethernet","fab fa-etsy","fas fa-euro-sign","fab fa-evernote","fas fa-exchange-alt","fas fa-exclamation","fas fa-exclamation-circle","fas fa-exclamation-triangle","fas fa-expand","fas fa-expand-alt","fas fa-expand-arrows-alt","fab fa-expeditedssl","fas fa-external-link-alt","fas fa-external-link-square-alt","fas fa-eye","fas fa-eye-dropper","fas fa-eye-slash","fab fa-facebook","fab fa-facebook-f","fab fa-facebook-messenger","fab fa-facebook-square","fas fa-fan","fab fa-fantasy-flight-games","fas fa-fast-backward","fas fa-fast-forward","fas fa-faucet","fas fa-fax","fas fa-feather","fas fa-feather-alt","fab fa-fedex","fab fa-fedora","fas fa-female","fas fa-fighter-jet","fab fa-figma","fas fa-file","fas fa-file-alt","fas fa-file-archive","fas fa-file-audio","fas fa-file-code","fas fa-file-contract","fas fa-file-csv","fas fa-file-download","fas fa-file-excel","fas fa-file-export","fas fa-file-image","fas fa-file-import","fas fa-file-invoice","fas fa-file-invoice-dollar","fas fa-file-medical","fas fa-file-medical-alt","fas fa-file-pdf","fas fa-file-powerpoint","fas fa-file-prescription","fas fa-file-signature","fas fa-file-upload","fas fa-file-video","fas fa-file-word","fas fa-fill","fas fa-fill-drip","fas fa-film","fas fa-filter","fas fa-fingerprint","fas fa-fire","fas fa-fire-alt","fas fa-fire-extinguisher","fab fa-firefox","fab fa-firefox-browser","fas fa-first-aid","fab fa-first-order","fab fa-first-order-alt","fab fa-firstdraft","fas fa-fish","fas fa-fist-raised","fas fa-flag","fas fa-flag-checkered","fas fa-flag-usa","fas fa-flask","fab fa-flickr","fab fa-flipboard","fas fa-flushed","fab fa-fly","fas fa-folder","fas fa-folder-minus","fas fa-folder-open","fas fa-folder-plus","fas fa-font","fab fa-font-awesome","fab fa-font-awesome-alt","fab fa-font-awesome-flag","fab fa-font-awesome-logo-full","fab fa-fonticons","fab fa-fonticons-fi","fas fa-football-ball","fab fa-fort-awesome","fab fa-fort-awesome-alt","fab fa-forumbee","fas fa-forward","fab fa-foursquare","fab fa-free-code-camp","fab fa-freebsd","fas fa-frog","fas fa-frown","fas fa-frown-open","fab fa-fulcrum","fas fa-funnel-dollar","fas fa-futbol","fab fa-galactic-republic","fab fa-galactic-senate","fas fa-gamepad","fas fa-gas-pump","fas fa-gavel","fas fa-gem","fas fa-genderless","fab fa-get-pocket","fab fa-gg","fab fa-gg-circle","fas fa-ghost","fas fa-gift","fas fa-gifts","fab fa-git","fab fa-git-alt","fab fa-git-square","fab fa-github","fab fa-github-alt","fab fa-github-square","fab fa-gitkraken","fab fa-gitlab","fab fa-gitter","fas fa-glass-cheers","fas fa-glass-martini","fas fa-glass-martini-alt","fas fa-glass-whiskey","fas fa-glasses","fab fa-glide","fab fa-glide-g","fas fa-globe","fas fa-globe-africa","fas fa-globe-americas","fas fa-globe-asia","fas fa-globe-europe","fab fa-gofore","fas fa-golf-ball","fab fa-goodreads","fab fa-goodreads-g","fab fa-google","fab fa-google-drive","fab fa-google-pay","fab fa-google-play","fab fa-google-plus","fab fa-google-plus-g","fab fa-google-plus-square","fab fa-google-wallet","fas fa-gopuram","fas fa-graduation-cap","fab fa-gratipay","fab fa-grav","fas fa-greater-than","fas fa-greater-than-equal","fas fa-grimace","fas fa-grin","fas fa-grin-alt","fas fa-grin-beam","fas fa-grin-beam-sweat","fas fa-grin-hearts","fas fa-grin-squint","fas fa-grin-squint-tears","fas fa-grin-stars","fas fa-grin-tears","fas fa-grin-tongue","fas fa-grin-tongue-squint","fas fa-grin-tongue-wink","fas fa-grin-wink","fas fa-grip-horizontal","fas fa-grip-lines","fas fa-grip-lines-vertical","fas fa-grip-vertical","fab fa-gripfire","fab fa-grunt","fab fa-guilded","fas fa-guitar","fab fa-gulp","fas fa-h-square","fab fa-hacker-news","fab fa-hacker-news-square","fab fa-hackerrank","fas fa-hamburger","fas fa-hammer","fas fa-hamsa","fas fa-hand-holding","fas fa-hand-holding-heart","fas fa-hand-holding-medical","fas fa-hand-holding-usd","fas fa-hand-holding-water","fas fa-hand-lizard","fas fa-hand-middle-finger","fas fa-hand-paper","fas fa-hand-peace","fas fa-hand-point-down","fas fa-hand-point-left","fas fa-hand-point-right","fas fa-hand-point-up","fas fa-hand-pointer","fas fa-hand-rock","fas fa-hand-scissors","fas fa-hand-sparkles","fas fa-hand-spock","fas fa-hands","fas fa-hands-helping","fas fa-hands-wash","fas fa-handshake","fas fa-handshake-alt-slash","fas fa-handshake-slash","fas fa-hanukiah","fas fa-hard-hat","fas fa-hashtag","fas fa-hat-cowboy","fas fa-hat-cowboy-side","fas fa-hat-wizard","fas fa-hdd","fas fa-head-side-cough","fas fa-head-side-cough-slash","fas fa-head-side-mask","fas fa-head-side-virus","fas fa-heading","fas fa-headphones","fas fa-headphones-alt","fas fa-headset","fas fa-heart","fas fa-heart-broken","fas fa-heartbeat","fas fa-helicopter","fas fa-highlighter","fas fa-hiking","fas fa-hippo","fab fa-hips","fab fa-hire-a-helper","fas fa-history","fab fa-hive","fas fa-hockey-puck","fas fa-holly-berry","fas fa-home","fab fa-hooli","fab fa-hornbill","fas fa-horse","fas fa-horse-head","fas fa-hospital","fas fa-hospital-alt","fas fa-hospital-symbol","fas fa-hospital-user","fas fa-hot-tub","fas fa-hotdog","fas fa-hotel","fab fa-hotjar","fas fa-hourglass","fas fa-hourglass-end","fas fa-hourglass-half","fas fa-hourglass-start","fas fa-house-damage","fas fa-house-user","fab fa-houzz","fas fa-hryvnia","fab fa-html5","fab fa-hubspot","fas fa-i-cursor","fas fa-ice-cream","fas fa-icicles","fas fa-icons","fas fa-id-badge","fas fa-id-card","fas fa-id-card-alt","fab fa-ideal","fas fa-igloo","fas fa-image","fas fa-images","fab fa-imdb","fas fa-inbox","fas fa-indent","fas fa-industry","fas fa-infinity","fas fa-info","fas fa-info-circle","fab fa-innosoft","fab fa-instagram","fab fa-instagram-square","fab fa-instalod","fab fa-intercom","fab fa-internet-explorer","fab fa-invision","fab fa-ioxhost","fas fa-italic","fab fa-itch-io","fab fa-itunes","fab fa-itunes-note","fab fa-java","fas fa-jedi","fab fa-jedi-order","fab fa-jenkins","fab fa-jira","fab fa-joget","fas fa-joint","fab fa-joomla","fas fa-journal-whills","fab fa-js","fab fa-js-square","fab fa-jsfiddle","fas fa-kaaba","fab fa-kaggle","fas fa-key","fab fa-keybase","fas fa-keyboard","fab fa-keycdn","fas fa-khanda","fab fa-kickstarter","fab fa-kickstarter-k","fas fa-kiss","fas fa-kiss-beam","fas fa-kiss-wink-heart","fas fa-kiwi-bird","fab fa-korvue","fas fa-landmark","fas fa-language","fas fa-laptop","fas fa-laptop-code","fas fa-laptop-house","fas fa-laptop-medical","fab fa-laravel","fab fa-lastfm","fab fa-lastfm-square","fas fa-laugh","fas fa-laugh-beam","fas fa-laugh-squint","fas fa-laugh-wink","fas fa-layer-group","fas fa-leaf","fab fa-leanpub","fas fa-lemon","fab fa-less","fas fa-less-than","fas fa-less-than-equal","fas fa-level-down-alt","fas fa-level-up-alt","fas fa-life-ring","fas fa-lightbulb","fab fa-line","fas fa-link","fab fa-linkedin","fab fa-linkedin-in","fab fa-linode","fab fa-linux","fas fa-lira-sign","fas fa-list","fas fa-list-alt","fas fa-list-ol","fas fa-list-ul","fas fa-location-arrow","fas fa-lock","fas fa-lock-open","fas fa-long-arrow-alt-down","fas fa-long-arrow-alt-left","fas fa-long-arrow-alt-right","fas fa-long-arrow-alt-up","fas fa-low-vision","fas fa-luggage-cart","fas fa-lungs","fas fa-lungs-virus","fab fa-lyft","fab fa-magento","fas fa-magic","fas fa-magnet","fas fa-mail-bulk","fab fa-mailchimp","fas fa-male","fab fa-mandalorian","fas fa-map","fas fa-map-marked","fas fa-map-marked-alt","fas fa-map-marker","fas fa-map-marker-alt","fas fa-map-pin","fas fa-map-signs","fab fa-markdown","fas fa-marker","fas fa-mars","fas fa-mars-double","fas fa-mars-stroke","fas fa-mars-stroke-h","fas fa-mars-stroke-v","fas fa-mask","fab fa-mastodon","fab fa-maxcdn","fab fa-mdb","fas fa-medal","fab fa-medapps","fab fa-medium","fab fa-medium-m","fas fa-medkit","fab fa-medrt","fab fa-meetup","fab fa-megaport","fas fa-meh","fas fa-meh-blank","fas fa-meh-rolling-eyes","fas fa-memory","fab fa-mendeley","fas fa-menorah","fas fa-mercury","fas fa-meteor","fab fa-microblog","fas fa-microchip","fas fa-microphone","fas fa-microphone-alt","fas fa-microphone-alt-slash","fas fa-microphone-slash","fas fa-microscope","fab fa-microsoft","fas fa-minus","fas fa-minus-circle","fas fa-minus-square","fas fa-mitten","fab fa-mix","fab fa-mixcloud","fab fa-mixer","fab fa-mizuni","fas fa-mobile","fas fa-mobile-alt","fab fa-modx","fab fa-monero","fas fa-money-bill","fas fa-money-bill-alt","fas fa-money-bill-wave","fas fa-money-bill-wave-alt","fas fa-money-check","fas fa-money-check-alt","fas fa-monument","fas fa-moon","fas fa-mortar-pestle","fas fa-mosque","fas fa-motorcycle","fas fa-mountain","fas fa-mouse","fas fa-mouse-pointer","fas fa-mug-hot","fas fa-music","fab fa-napster","fab fa-neos","fas fa-network-wired","fas fa-neuter","fas fa-newspaper","fab fa-nimblr","fab fa-node","fab fa-node-js","fas fa-not-equal","fas fa-notes-medical","fab fa-npm","fab fa-ns8","fab fa-nutritionix","fas fa-object-group","fas fa-object-ungroup","fab fa-octopus-deploy","fab fa-odnoklassniki","fab fa-odnoklassniki-square","fas fa-oil-can","fab fa-old-republic","fas fa-om","fab fa-opencart","fab fa-openid","fab fa-opera","fab fa-optin-monster","fab fa-orcid","fab fa-osi","fas fa-otter","fas fa-outdent","fab fa-page4","fab fa-pagelines","fas fa-pager","fas fa-paint-brush","fas fa-paint-roller","fas fa-palette","fab fa-palfed","fas fa-pallet","fas fa-paper-plane","fas fa-paperclip","fas fa-parachute-box","fas fa-paragraph","fas fa-parking","fas fa-passport","fas fa-pastafarianism","fas fa-paste","fab fa-patreon","fas fa-pause","fas fa-pause-circle","fas fa-paw","fab fa-paypal","fas fa-peace","fas fa-pen","fas fa-pen-alt","fas fa-pen-fancy","fas fa-pen-nib","fas fa-pen-square","fas fa-pencil-alt","fas fa-pencil-ruler","fab fa-penny-arcade","fas fa-people-arrows","fas fa-people-carry","fas fa-pepper-hot","fab fa-perbyte","fas fa-percent","fas fa-percentage","fab fa-periscope","fas fa-person-booth","fab fa-phabricator","fab fa-phoenix-framework","fab fa-phoenix-squadron","fas fa-phone","fas fa-phone-alt","fas fa-phone-slash","fas fa-phone-square","fas fa-phone-square-alt","fas fa-phone-volume","fas fa-photo-video","fab fa-php","fab fa-pied-piper","fab fa-pied-piper-alt","fab fa-pied-piper-hat","fab fa-pied-piper-pp","fab fa-pied-piper-square","fas fa-piggy-bank","fas fa-pills","fab fa-pinterest","fab fa-pinterest-p","fab fa-pinterest-square","fas fa-pizza-slice","fas fa-place-of-worship","fas fa-plane","fas fa-plane-arrival","fas fa-plane-departure","fas fa-plane-slash","fas fa-play","fas fa-play-circle","fab fa-playstation","fas fa-plug","fas fa-plus","fas fa-plus-circle","fas fa-plus-square","fas fa-podcast","fas fa-poll","fas fa-poll-h","fas fa-poo","fas fa-poo-storm","fas fa-poop","fas fa-portrait","fas fa-pound-sign","fas fa-power-off","fas fa-pray","fas fa-praying-hands","fas fa-prescription","fas fa-prescription-bottle","fas fa-prescription-bottle-alt","fas fa-print","fas fa-procedures","fab fa-product-hunt","fas fa-project-diagram","fas fa-pump-medical","fas fa-pump-soap","fab fa-pushed","fas fa-puzzle-piece","fab fa-python","fab fa-qq","fas fa-qrcode","fas fa-question","fas fa-question-circle","fas fa-quidditch","fab fa-quinscape","fab fa-quora"];
+
+let targetIconInputId = '';
+let targetPreviewId = '';
+
+window.openIconPicker = function(inputId, previewId) {
+    targetIconInputId = inputId;
+    targetPreviewId = previewId;
+    
+    renderIconGrid(availableIcons);
+    document.getElementById('icon-search').value = '';
+    document.getElementById('icon-picker-modal').style.display = 'flex';
+};
+
+window.closeIconPicker = function() {
+    document.getElementById('icon-picker-modal').style.display = 'none';
+};
+
+window.renderIconGrid = function(icons) {
+    const grid = document.getElementById('icon-grid');
+    grid.innerHTML = icons.map(icon => `
+        <button type="button" onclick="selectIcon('${icon}')" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: white; transition: background 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.5)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'" title="${icon}">
+            <i class="${icon}" style="font-size: 1.4rem;"></i>
+        </button>
+    `).join('');
+};
+
+window.selectIcon = function(iconClass) {
+    document.getElementById(targetIconInputId).value = iconClass;
+    document.getElementById(targetPreviewId).innerHTML = '<i class="' + iconClass + '"></i>';
+    closeIconPicker();
+};
+
+window.filterIcons = function() {
+    const query = document.getElementById('icon-search').value.toLowerCase();
+    const filtered = availableIcons.filter(icon => icon.toLowerCase().includes(query));
+    renderIconGrid(filtered);
+};
+
+let tempCategoryItems = [];
+
+window.addNewSkillCategory = function() {
+    document.getElementById('modal-title').innerText = 'Add New Skill Category';
+    document.getElementById('skill-id').value = '';
+    document.getElementById('skill-category').value = '';
+    document.getElementById('skill-icon').value = 'fas fa-star';
+    document.getElementById('category-icon-preview').innerHTML = '<i class="fas fa-star"></i>';
+    
+    document.getElementById('new-skill-name').value = '';
+    document.getElementById('new-skill-icon').value = '';
+    document.getElementById('item-icon-preview').innerHTML = '<i class="fas fa-star"></i>';
+    
+    tempCategoryItems = [];
+    renderTempSkillItems();
+    openSkillsModal();
+};
+
+window.editSkillCategory = function(id) {
+    const cat = currentData.skills.find(c => c.id === id);
+    if (!cat) return;
+
+    document.getElementById('modal-title').innerText = 'Edit Skill Category';
+    document.getElementById('skill-id').value = cat.id;
+    document.getElementById('skill-category').value = cat.category;
+    document.getElementById('skill-icon').value = cat.icon;
+    document.getElementById('category-icon-preview').innerHTML = '<i class="' + cat.icon + '"></i>';
+    
+    document.getElementById('new-skill-name').value = '';
+    document.getElementById('new-skill-icon').value = '';
+    document.getElementById('item-icon-preview').innerHTML = '<i class="fas fa-star"></i>';
+    
+    // Deep copy items
+    tempCategoryItems = JSON.parse(JSON.stringify(cat.items));
+    renderTempSkillItems();
+    openSkillsModal();
+};
+
+window.deleteSkillCategory = function(id) {
+    if (confirm("Are you sure you want to delete this skill category and all its items?")) {
+        currentData.skills = currentData.skills.filter(c => c.id !== id);
+        saveDataToStorage();
+        renderSkillsList();
+    }
+};
+
+function renderTempSkillItems() {
+    const container = document.getElementById('temp-skill-items-container');
+    if (!container) return;
+    
+    if (tempCategoryItems.length === 0) {
+        container.innerHTML = '<div style="color: var(--clr-text-muted); font-size: 0.9rem;">No skills added yet.</div>';
+        return;
+    }
+
+    container.innerHTML = tempCategoryItems.map((item, index) => `
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; background: rgba(0,0,0,0.2); padding: 8px; border-radius: 6px;">
+            <i class="${item.icon}" style="width: 20px; text-align: center; color: var(--clr-primary-light);"></i>
+            <span style="flex: 1;">${item.name}</span>
+            <button type="button" class="btn-admin btn-delete" onclick="removeTempSkillItem(${index})" style="padding: 4px 8px; font-size: 0.8rem;"><i class="fas fa-times"></i></button>
+        </div>
+    `).join('');
+}
+
+window.addTempSkillItem = function() {
+    const nameInput = document.getElementById('new-skill-name');
+    const iconInput = document.getElementById('new-skill-icon');
+    
+    const name = nameInput.value.trim();
+    const icon = iconInput.value.trim();
+    
+    if (!name || !icon) {
+        alert('Please provide both a skill name and an icon class (e.g. "fab fa-react").');
+        return;
+    }
+    
+    tempCategoryItems.push({ name, icon });
+    nameInput.value = '';
+    iconInput.value = '';
+    document.getElementById('item-icon-preview').innerHTML = '<i class="fas fa-star"></i>';
+    renderTempSkillItems();
+};
+
+window.removeTempSkillItem = function(index) {
+    tempCategoryItems.splice(index, 1);
+    renderTempSkillItems();
+};
+
+const skillForm = document.getElementById('skill-form');
+if (skillForm) {
+    skillForm.onsubmit = (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('skill-id').value;
+        const category = document.getElementById('skill-category').value.trim();
+        const icon = document.getElementById('skill-icon').value.trim();
+        
+        const newCat = {
+            id: id || 'cat_' + Date.now(),
+            category,
+            icon,
+            items: tempCategoryItems
+        };
+        
+        if (id) {
+            const index = currentData.skills.findIndex(c => c.id === id);
+            if (index !== -1) currentData.skills[index] = newCat;
+        } else {
+            currentData.skills.push(newCat);
+        }
+        
+        saveDataToStorage();
+        renderSkillsList();
+        closeSkillsModal();
+    };
+}

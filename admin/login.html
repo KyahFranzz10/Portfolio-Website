@@ -112,7 +112,13 @@
             const expectedHash = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
             
             if (user === 'admin' && passHash === expectedHash) {
-                sessionStorage.setItem('admin_logged_in', 'true');
+                const token = btoa(JSON.stringify({
+                    auth: true,
+                    role: 'admin',
+                    expiry: Date.now() + 1000 * 60 * 60 * 24 // 24 hours expiry
+                }));
+                sessionStorage.setItem('_admin_token', token);
+                sessionStorage.removeItem('admin_logged_in'); // Clean up old legacy method if any
                 window.location.href = 'index.html';
             } else {
                 showError();

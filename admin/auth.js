@@ -7,8 +7,6 @@
 
     // Helpers to toggle layout access
     function grantAccess() {
-        sessionStorage.setItem('admin_logged_in', 'true');
-        // Reveal the body layout by applying flex (reverses the default display: none in css)
         const bodies = document.querySelectorAll('body.admin-body');
         bodies.forEach(b => b.style.setProperty('display', 'flex', 'important'));
         
@@ -17,16 +15,27 @@
     }
 
     function denyAccess() {
-        sessionStorage.removeItem('admin_logged_in');
+        sessionStorage.removeItem('_admin_token');
+        sessionStorage.removeItem('admin_logged_in'); // Cleanup old legacy token
         window.location.href = 'login.html';
     }
 
-    // 2. Perform authentication status check
-    async function checkAuth() {
-        // Standalone static / Offline session check
-        if (sessionStorage.getItem('admin_logged_in') === 'true') {
-            grantAccess();
-        } else {
+    // 2. Perform authentication status check with token validation
+    function checkAuth() {
+        try {
+            // Support legacy logged in check briefly but enforce new token if used
+            const tokenStr = sessionStorage.getItem('_admin_token');
+            if (!tokenStr) {
+                return denyAccess();
+            }
+
+            const token = JSON.parse(atob(tokenStr));
+            if (token.auth === true && token.role === 'admin' && token.expiry > Date.now()) {
+                grantAccess();
+            } else {
+                denyAccess();
+            }
+        } catch(e) {
             denyAccess();
         }
     }
@@ -37,5 +46,19 @@
     } else {
         checkAuth();
     }
-})();
 
+    // 3. Periodically enforce security every 5 seconds to prevent tampering
+    setInterval(checkAuth, 5000);
+
+    // 4. Expose verification for other scripts (e.g. before saving data)
+    window._verifyAuth = function() {
+        try {
+            const tokenStr = sessionStorage.getItem('_admin_token');
+            if (!tokenStr) return false;
+            const token = JSON.parse(atob(tokenStr));
+            return token.auth === true && token.role === 'admin' && token.expiry > Date.now();
+        } catch(e) {
+            return false;
+        }
+    };
+})();
